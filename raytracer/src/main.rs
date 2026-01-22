@@ -6,6 +6,8 @@ fn main() {
 
     let mut img: RgbImage = ImageBuffer::new(w, h);
 
+    // Checkerboard
+    // +y is downward
     for x in 0..w {
         for y in 0..h {
             let red = if (x + y) % 2 == 0 {
