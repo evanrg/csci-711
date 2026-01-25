@@ -11,6 +11,16 @@ pub struct Sphere {
     material: Material,
 }
 
+impl Sphere {
+    pub fn new(center: Vec3, radius: f32, material: Material) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
+    }
+}
+
 impl Object for Sphere {
     fn intersect(&self, ray: &Ray) -> Intersection {
         // calculate variables for quadratic equation

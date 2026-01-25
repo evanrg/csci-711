@@ -3,10 +3,14 @@ pub mod camera;
 use crate::{geometry::object::Object, lighting::ray::Ray};
 
 pub struct World {
-    objects: Vec<Box<dyn Object>>,
+    pub objects: Vec<Box<dyn Object + 'static>>,
 }
 
 impl World {
+    pub fn new() -> Self {
+        Self { objects: vec![] }
+    }
+
     pub fn add<T: Object + 'static>(&mut self, obj: T) {
         let boxed_obj = Box::new(obj);
         self.objects.push(boxed_obj);

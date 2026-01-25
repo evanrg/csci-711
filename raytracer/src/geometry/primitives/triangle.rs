@@ -7,8 +7,13 @@ use crate::{
 
 pub struct Triangle {
     vertices: (Vec3, Vec3, Vec3),
-    normal: Vec3,
     material: Material,
+}
+
+impl Triangle {
+    pub fn new(vertices: (Vec3, Vec3, Vec3), material: Material) -> Self {
+        Self { vertices, material }
+    }
 }
 
 impl Object for Triangle {

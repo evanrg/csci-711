@@ -1,8 +1,8 @@
 use glam::Vec3;
 
 pub struct Intersection {
-    intersection_point: Option<Vec3>,
-    normal: Option<Vec3>,
+    pub intersection_point: Option<Vec3>,
+    pub normal: Option<Vec3>,
 }
 
 impl Intersection {
