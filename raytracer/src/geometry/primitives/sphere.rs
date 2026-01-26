@@ -1,4 +1,4 @@
-use glam::Vec3;
+use glam::{Mat4, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
     geometry::{intersection::Intersection, material::Material, object::Object},
@@ -9,6 +9,7 @@ pub struct Sphere {
     center: Vec3,
     radius: f32,
     material: Material,
+    model_transform: Mat4,
 }
 
 impl Sphere {
@@ -17,31 +18,36 @@ impl Sphere {
             center,
             radius,
             material,
+            model_transform: Mat4::IDENTITY,
         }
+    }
+
+    pub fn translate_mut(&mut self, distance: Vec3) {
+        self.model_transform.col_mut(3).x = distance.x;
+        self.model_transform.col_mut(3).y = distance.y;
+        self.model_transform.col_mut(3).z = distance.z;
+    }
+
+    fn center_mut(&mut self, transform: &Mat4) {
+        let center_h = Vec4::from((self.center, 1.0));
+        self.center = transform.mul_vec4(center_h).xyz();
     }
 }
 
 impl Object for Sphere {
-    fn intersect(&self, ray: &Ray) -> Intersection {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         // calculate variables for quadratic equation
-        let ray_to_center_x = ray.origin.x - self.center.x;
-        let ray_to_center_y = ray.origin.y - self.center.y;
-        let ray_to_center_z = ray.origin.z - self.center.z;
+        let ray_to_center = ray.origin - self.center;
 
-        let b = 2.0
-            * (ray.direction.x * ray_to_center_x
-                + ray.direction.y * ray_to_center_y
-                + ray.direction.z * ray_to_center_z);
+        let b = 2.0 * (ray.direction.dot(ray_to_center));
 
-        let c = ray_to_center_x * ray_to_center_x
-            + ray_to_center_y * ray_to_center_y
-            + ray_to_center_z * ray_to_center_z;
+        let c = ray_to_center.length_squared() - self.radius * self.radius;
 
         let discrim = b * b - 4.0 * c;
 
         // no intersections
         if discrim < 0.0 {
-            return Intersection::new(None, None);
+            return None;
         }
 
         // exactly one intersection (hits surface)
@@ -50,7 +56,7 @@ impl Object for Sphere {
 
             // intersection behind the origin
             if omega < 0.0 {
-                return Intersection::new(None, None);
+                return None;
             }
 
             let i_x = ray.origin.x + ray.direction.x * omega;
@@ -61,10 +67,11 @@ impl Object for Sphere {
             let n_y = i_y - self.center.y;
             let n_z = i_z - self.center.z;
 
-            return Intersection::new(
-                Some(Vec3::new(i_x, i_y, i_z)),
-                Some(Vec3::new(n_x, n_y, n_z).normalize()),
-            );
+            return Some(Intersection::new(
+                Vec3::new(i_x, i_y, i_z),
+                Vec3::new(n_x, n_y, n_z).normalize(),
+                self.material,
+            ));
         }
 
         // multiple intersections
@@ -77,7 +84,8 @@ impl Object for Sphere {
         if omega_p >= 0.0 && omega_m >= 0.0 {
             omega = omega_p.min(omega_m);
         } else if omega_p < 0.0 && omega_m < 0.0 {
-            return Intersection::new(None, None);
+            // println!("sphere: both roots negative");
+            return None;
         } else {
             if omega_m >= 0.0 {
                 omega = omega_m;
@@ -94,13 +102,18 @@ impl Object for Sphere {
         let n_y = i_y - self.center.y;
         let n_z = i_z - self.center.z;
 
-        Intersection::new(
-            Some(Vec3::new(i_x, i_y, i_z)),
-            Some(Vec3::new(n_x, n_y, n_z).normalize()),
-        )
+        Some(Intersection::new(
+            Vec3::new(i_x, i_y, i_z),
+            Vec3::new(n_x, n_y, n_z).normalize(),
+            self.material,
+        ))
     }
 
-    fn get_material(&self) -> &Material {
-        return &self.material;
+    fn to_world_space_mut(&mut self) {
+        self.center_mut(&self.model_transform.clone());
+    }
+
+    fn to_view_space_mut(&mut self, view_transform: &Mat4) {
+        self.center_mut(view_transform);
     }
 }

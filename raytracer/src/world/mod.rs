@@ -1,14 +1,23 @@
 pub mod camera;
 
-use crate::{geometry::object::Object, lighting::ray::Ray};
+use glam::{Mat4, Vec3};
+
+use crate::{
+    geometry::{intersection::Intersection, object::Object},
+    lighting::ray::Ray,
+};
 
 pub struct World {
-    pub objects: Vec<Box<dyn Object + 'static>>,
+    objects: Vec<Box<dyn Object + 'static>>,
+    pub background_color: Vec3,
 }
 
 impl World {
-    pub fn new() -> Self {
-        Self { objects: vec![] }
+    pub fn new(background_color: Vec3) -> Self {
+        Self {
+            objects: vec![],
+            background_color,
+        }
     }
 
     pub fn add<T: Object + 'static>(&mut self, obj: T) {
@@ -16,15 +25,48 @@ impl World {
         self.objects.push(boxed_obj);
     }
 
-    pub fn transform<T: Object>(&self, obj: T) {
-        unimplemented!();
+    pub fn intersection_from_ray(&self, ray: &Ray) -> Option<Intersection> {
+        let mut intersects: Vec<Intersection> = vec![];
+
+        for obj in &self.objects {
+            if let Some(int) = obj.as_ref().intersect(ray) {
+                intersects.push(int);
+            }
+        }
+
+        if intersects.is_empty() {
+            return None;
+        }
+
+        if intersects.len() == 1 {
+            return Some(intersects[0]);
+        }
+
+        let mut min_intersect = intersects[0];
+
+        for int in intersects {
+            let min_dist = min_intersect.intersection_point.distance(ray.origin);
+            let curr_dist = int.intersection_point.distance(ray.origin);
+
+            if curr_dist < min_dist {
+                min_intersect = int;
+            }
+        }
+
+        Some(min_intersect)
     }
 
-    pub fn transform_all_objects(&mut self) {
-        unimplemented!();
+    pub fn objects_to_world_space(&mut self) {
+        for obj_idx in 0..self.objects.len() {
+            let obj = self.objects.get_mut(obj_idx).unwrap();
+            obj.as_mut().to_world_space_mut();
+        }
     }
 
-    pub fn spawn_ray(&mut self, ray: Ray) {
-        unimplemented!();
+    pub fn objects_to_view_space(&mut self, view_transform: &Mat4) {
+        for obj_idx in 0..self.objects.len() {
+            let obj = self.objects.get_mut(obj_idx).unwrap();
+            obj.as_mut().to_view_space_mut(view_transform);
+        }
     }
 }
