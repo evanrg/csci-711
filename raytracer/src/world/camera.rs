@@ -1,5 +1,5 @@
 use glam::{Mat4, Vec3};
-use image::{DynamicImage, ImageBuffer, RgbImage};
+use image::{ImageBuffer, RgbImage};
 
 use crate::{lighting::ray::Ray, world::World};
 

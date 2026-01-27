@@ -1,4 +1,6 @@
-use glam::{Mat4, Vec3, Vec4, Vec4Swizzles};
+use std::{f32::consts::PI};
+
+use glam::{Mat4, Quat, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
     geometry::{intersection::Intersection, material::Material, object::Object},
@@ -9,6 +11,9 @@ pub struct Triangle {
     vertices: (Vec3, Vec3, Vec3),
     material: Material,
     model_transform: Mat4,
+    scaling_matrix: Mat4,
+    translation_matrix: Mat4,
+    rotation_matrix: Mat4,
 }
 
 impl Triangle {
@@ -17,13 +22,68 @@ impl Triangle {
             vertices,
             material,
             model_transform: Mat4::IDENTITY,
+            scaling_matrix: Mat4::IDENTITY,
+            translation_matrix: Mat4::IDENTITY,
+            rotation_matrix: Mat4::IDENTITY,
         }
     }
 
+    pub fn scale_mut(&mut self, scalars: Vec3) {
+        self.scaling_matrix.col_mut(0).x = scalars.x;
+        self.scaling_matrix.col_mut(1).y = scalars.y;
+        self.scaling_matrix.col_mut(2).z = scalars.z;
+    }
+
     pub fn translate_mut(&mut self, distance: Vec3) {
-        self.model_transform.col_mut(3).x = distance.x;
-        self.model_transform.col_mut(3).y = distance.y;
-        self.model_transform.col_mut(3).z = distance.z;
+        self.translation_matrix.col_mut(3).x = distance.x;
+        self.translation_matrix.col_mut(3).y = distance.y;
+        self.translation_matrix.col_mut(3).z = distance.z;
+    }
+
+    pub fn rotate_x_mut(&mut self, degrees: f32) {
+        let radians = degrees * PI / 180.0;
+
+        let r_x = Mat4::from_rotation_x(radians);
+
+        let q_x = Quat::from_mat4(&r_x);
+        let q_r = Quat::from_mat4(&self.rotation_matrix);
+
+        let q = q_x.mul_quat(q_r);
+
+        self.rotation_matrix = Mat4::from_quat(q);
+    }
+
+    pub fn rotate_y_mut(&mut self, degrees: f32) {
+        let radians = degrees * PI / 180.0;
+
+        let r_y = Mat4::from_rotation_y(radians);
+
+        let q_y = Quat::from_mat4(&r_y);
+        let q_r = Quat::from_mat4(&self.rotation_matrix);
+
+        let q = q_y.mul_quat(q_r);
+
+        self.rotation_matrix = Mat4::from_quat(q);
+    }
+
+    pub fn rotate_z_mut(&mut self, degrees: f32) {
+        let radians = degrees * PI / 180.0;
+
+        let r_z = Mat4::from_rotation_z(radians);
+
+        let q_z = Quat::from_mat4(&r_z);
+        let q_r = Quat::from_mat4(&self.rotation_matrix);
+
+        let q = q_z.mul_quat(q_r);
+
+        self.rotation_matrix = Mat4::from_quat(q);
+    }
+
+    pub fn compile_model(&mut self) {
+        self.model_transform = self.translation_matrix
+        .mul_mat4(&self.rotation_matrix)
+        .mul_mat4(&self.scaling_matrix)
+        .mul_mat4(&self.model_transform);
     }
 
     fn verts_mut(&mut self, transform: &Mat4) {
