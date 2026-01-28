@@ -3,7 +3,7 @@ use glam::Vec3;
 use crate::{
     geometry::{
         material::Material,
-        primitives::{sphere::Sphere, triangle::Triangle},
+        primitives::{cube::Cube, sphere::Sphere, triangle::Triangle},
     },
     world::{World, camera::Camera},
 };
@@ -15,7 +15,10 @@ mod world;
 fn main() {
     // Get our objects setup
     let (sphere_gray, sphere_white) = create_spheres();
+
     let (triangle_left, triangle_right) = create_floor();
+
+    let cube = create_cubes();
 
     // Setup camera
     let camera = create_camera();
@@ -26,6 +29,7 @@ fn main() {
 
     world.add(sphere_gray);
     world.add(sphere_white);
+    world.add(cube);
     world.add(triangle_left);
     world.add(triangle_right);
 
@@ -108,4 +112,16 @@ fn create_spheres() -> (Sphere, Sphere) {
     sphere_white.translate_mut(Vec3::new(1.5, -1.0, -6.0));
 
     (sphere_gray, sphere_white)
+}
+
+fn create_cubes() -> Cube {
+    let cube_color = Vec3::new(0.0, 1.0, 0.0);
+    let cube_material = Material::new(cube_color);
+    let mut cube = Cube::new(1.0, cube_material);
+
+    cube.translate_mut(Vec3::new(2.0, 2.0, 0.0));
+    cube.rotate_y_mut(45.0);
+    cube.rotate_x_mut(45.0);
+
+    cube
 }

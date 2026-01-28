@@ -79,7 +79,7 @@ impl Triangle {
         self.rotation_matrix = Mat4::from_quat(q);
     }
 
-    fn verts_mut(&mut self, transform: &Mat4) {
+    pub fn verts_mut(&mut self, transform: &Mat4) {
         let v1_h = Vec4::from((self.vertices.0, 1.0));
         let v2_h = Vec4::from((self.vertices.1, 1.0));
         let v3_h = Vec4::from((self.vertices.2, 1.0));
