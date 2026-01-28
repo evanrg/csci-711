@@ -10,6 +10,7 @@ pub struct Sphere {
     radius: f32,
     material: Material,
     model_transform: Mat4,
+    translation_matrix: Mat4,
 }
 
 impl Sphere {
@@ -19,13 +20,14 @@ impl Sphere {
             radius,
             material,
             model_transform: Mat4::IDENTITY,
+            translation_matrix: Mat4::IDENTITY,
         }
     }
 
     pub fn translate_mut(&mut self, distance: Vec3) {
-        self.model_transform.col_mut(3).x = distance.x;
-        self.model_transform.col_mut(3).y = distance.y;
-        self.model_transform.col_mut(3).z = distance.z;
+        self.translation_matrix.col_mut(3).x = distance.x;
+        self.translation_matrix.col_mut(3).y = distance.y;
+        self.translation_matrix.col_mut(3).z = distance.z;
     }
 
     fn center_mut(&mut self, transform: &Mat4) {
@@ -115,5 +117,9 @@ impl Object for Sphere {
 
     fn to_view_space_mut(&mut self, view_transform: &Mat4) {
         self.center_mut(view_transform);
+    }
+
+    fn compile_model(&mut self) {
+        self.model_transform = self.translation_matrix.mul_mat4(&self.model_transform);
     }
 }

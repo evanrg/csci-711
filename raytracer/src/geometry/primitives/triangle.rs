@@ -1,4 +1,4 @@
-use std::{f32::consts::PI};
+use std::f32::consts::PI;
 
 use glam::{Mat4, Quat, Vec3, Vec4, Vec4Swizzles};
 
@@ -79,13 +79,6 @@ impl Triangle {
         self.rotation_matrix = Mat4::from_quat(q);
     }
 
-    pub fn compile_model(&mut self) {
-        self.model_transform = self.translation_matrix
-        .mul_mat4(&self.rotation_matrix)
-        .mul_mat4(&self.scaling_matrix)
-        .mul_mat4(&self.model_transform);
-    }
-
     fn verts_mut(&mut self, transform: &Mat4) {
         let v1_h = Vec4::from((self.vertices.0, 1.0));
         let v2_h = Vec4::from((self.vertices.1, 1.0));
@@ -140,5 +133,13 @@ impl Object for Triangle {
 
     fn to_view_space_mut(&mut self, view_transform: &Mat4) {
         self.verts_mut(view_transform);
+    }
+
+    fn compile_model(&mut self) {
+        self.model_transform = self
+            .translation_matrix
+            .mul_mat4(&self.rotation_matrix)
+            .mul_mat4(&self.scaling_matrix)
+            .mul_mat4(&self.model_transform);
     }
 }

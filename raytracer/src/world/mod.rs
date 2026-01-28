@@ -69,4 +69,11 @@ impl World {
             obj.as_mut().to_view_space_mut(view_transform);
         }
     }
+
+    pub fn compile_object_models(&mut self) {
+        for obj_idx in 0..self.objects.len() {
+            let obj = self.objects.get_mut(obj_idx).unwrap();
+            obj.as_mut().compile_model();
+        }
+    }
 }
