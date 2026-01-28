@@ -117,7 +117,7 @@ fn create_spheres() -> (Sphere, Sphere) {
 fn create_cubes() -> Cube {
     let cube_color = Vec3::new(0.0, 1.0, 0.0);
     let cube_material = Material::new(cube_color);
-    let mut cube = Cube::new(1.0, cube_material);
+    let mut cube = Cube::new(cube_material);
 
     cube.translate_mut(Vec3::new(2.0, 2.0, 0.0));
     cube.rotate_y_mut(45.0);

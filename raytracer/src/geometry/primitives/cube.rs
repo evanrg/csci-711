@@ -14,7 +14,6 @@ use crate::{
 };
 
 pub struct Cube {
-    size: f32,
     triangles: Vec<Triangle>,
     material: Material,
     model_transform: Mat4,
@@ -24,13 +23,7 @@ pub struct Cube {
 }
 
 impl Cube {
-    pub fn new(size: f32, material: Material) -> Self {
-        let mut scale_m = Mat4::IDENTITY;
-
-        scale_m.col_mut(0).x = size;
-        scale_m.col_mut(1).y = size;
-        scale_m.col_mut(2).z = size;
-
+    pub fn new(material: Material) -> Self {
         let mut triangles = Vec::new();
 
         // front face
@@ -100,11 +93,10 @@ impl Cube {
         triangles.push(Triangle::new((bt2_v1, bt2_v2, bt2_v3), material));
 
         Self {
-            size,
             triangles,
             material,
             model_transform: Mat4::IDENTITY,
-            scaling_matrix: scale_m,
+            scaling_matrix: Mat4::IDENTITY,
             translation_matrix: Mat4::IDENTITY,
             rotation_matrix: Mat4::IDENTITY,
         }
@@ -114,6 +106,12 @@ impl Cube {
         self.translation_matrix.col_mut(3).x = distance.x;
         self.translation_matrix.col_mut(3).y = distance.y;
         self.translation_matrix.col_mut(3).z = distance.z;
+    }
+
+    pub fn scale_mut(&mut self, scalars: Vec3) {
+        self.scaling_matrix.col_mut(0).x = scalars.x;
+        self.scaling_matrix.col_mut(1).y = scalars.y;
+        self.scaling_matrix.col_mut(2).z = scalars.z;
     }
 
     pub fn rotate_x_mut(&mut self, degrees: f32) {
@@ -206,6 +204,7 @@ impl Object for Cube {
         self.model_transform = self
             .translation_matrix
             .mul_mat4(&self.rotation_matrix)
+            .mul_mat4(&self.scaling_matrix)
             .mul_mat4(&self.model_transform);
     }
 }
