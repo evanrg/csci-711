@@ -42,8 +42,8 @@ fn main() {
 }
 
 fn create_camera() -> Camera {
-    let camera_pos = Vec3::new(0.0, 0.0, 10.0);
-    let look_at = Vec3::new(0.0, 0.0, 0.0);
+    let camera_pos = Vec3::new(-15.0, 5.0, 10.0);
+    let look_at = Vec3::new(-8.0, 2.0, 0.0);
     let up = Vec3::new(0.0, 1.0, 0.0);
 
     let focal_length = 5.0;
