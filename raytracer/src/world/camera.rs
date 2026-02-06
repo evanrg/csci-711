@@ -1,12 +1,16 @@
 use glam::{Mat4, Vec3};
 use image::{ImageBuffer, RgbImage};
 
-use crate::{lighting::ray::Ray, world::World};
+use crate::{
+    lighting::{
+        illumination::{IlluminationModel, IlluminationType, phong::Phong},
+        ray::Ray,
+    },
+    world::World,
+};
 
 pub struct Camera {
     position: Vec3,
-    look_at: Vec3,
-    up: Vec3,
     view_transform: Mat4,
     focal_length: f32,
     image_height: u32,
@@ -38,8 +42,6 @@ impl Camera {
 
         Self {
             position,
-            look_at,
-            up,
             view_transform,
             focal_length,
             image_height: img_dim.1,
@@ -53,7 +55,7 @@ impl Camera {
         &self.view_transform
     }
 
-    pub fn render(&self, world: &World) {
+    pub fn render(&self, world: &World, illumination_type: IlluminationType) {
         let pixel_height = (self.film_plane_height as f32) / (self.image_height as f32);
         let pixel_width = (self.film_plane_width as f32) / (self.image_width as f32);
 
@@ -70,6 +72,10 @@ impl Camera {
 
         let mut rendered: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
+        let mut ill_model = match illumination_type {
+            IlluminationType::Phong => Phong::new(0.1, 0.7, 0.3, 32.0),
+        };
+
         // look at all our rays for intersections
         for y in 0..self.image_height {
             curr_position -= h_offset;
@@ -83,17 +89,18 @@ impl Camera {
                 let ray = Ray::new(origin, direction);
 
                 let intersection = world.intersection_from_ray(&ray);
-                let mut color = world.background_color;
+
+                // change rendering here based on illumination type
+                let mut radiance = world.background_radiance;
 
                 if let Some(int) = intersection {
-                    // println!("intersection");
-                    color = int.material.get_color();
+                    radiance = ill_model.illuminate(world, &int, self.position);
                 }
 
                 *rendered.get_pixel_mut(x, y) = image::Rgb([
-                    (color.x * 255.0) as u8,
-                    (color.y * 255.0) as u8,
-                    (color.z * 255.0) as u8,
+                    (radiance.x * 255.0) as u8,
+                    (radiance.y * 255.0) as u8,
+                    (radiance.z * 255.0) as u8,
                 ]);
             }
 

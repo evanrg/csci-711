@@ -5,6 +5,7 @@ use crate::{
         material::Material,
         primitives::{sphere::Sphere, triangle::Triangle},
     },
+    lighting::{illumination::IlluminationType, light_source::LightSource},
     world::{World, camera::Camera},
 };
 
@@ -20,10 +21,19 @@ fn main() {
     // Setup camera
     let camera = create_camera();
 
+    // Setup lighting
+    let lights = create_lights();
+
     // Create our world
     let bg_color = Vec3::new(0.4, 0.6, 1.0);
     let mut world = World::new(bg_color);
 
+    // Add all our lights
+    for light in lights {
+        world.add_light(light);
+    }
+
+    // Add all our objects
     world.add(sphere_gray);
     world.add(sphere_white);
     world.add(triangle_left);
@@ -37,8 +47,9 @@ fn main() {
 
     // convert to view space
     world.objects_to_view_space(camera.get_view_transform());
+    world.lights_to_view_space(camera.get_view_transform());
 
-    camera.render(&world);
+    camera.render(&world, IlluminationType::Phong);
 }
 
 fn create_camera() -> Camera {
@@ -60,12 +71,40 @@ fn create_camera() -> Camera {
     )
 }
 
+fn create_lights() -> Vec<LightSource> {
+    let mut lights = vec![];
+
+    let main_light_pos = Vec3::new(5.0, 10.0, 5.0);
+    let main_light_radiance = Vec3::new(2.0, 2.0, 2.0);
+    let main_light_ambient = Vec3::new(0.25, 0.25, 0.25);
+
+    lights.push(LightSource::new(
+        main_light_pos,
+        main_light_radiance,
+        main_light_ambient,
+    ));
+
+    // let red_light_pos = Vec3::new(-5.0, 5.0, 5.0);
+    // let red_light_radiance = Vec3::new(0.5, 0.1, 0.1);
+    // let red_light_ambient = Vec3::new(0.25, 0.0, 0.0);
+
+    // lights.push(LightSource::new(
+    //     red_light_pos,
+    //     red_light_radiance,
+    //     red_light_ambient,
+    // ));
+
+    lights
+}
+
 fn create_floor() -> (Triangle, Triangle) {
     let triangle_l_color = Vec3::new(1.0, 0.0, 0.0);
     let triangle_r_color = Vec3::new(1.0, 1.0, 0.0);
 
-    let triangle_l_material = Material::new(triangle_l_color);
-    let triangle_r_material = Material::new(triangle_r_color);
+    let spec_color = Vec3::new(1.0, 1.0, 1.0);
+
+    let triangle_l_material = Material::new(triangle_l_color, spec_color);
+    let triangle_r_material = Material::new(triangle_r_color, spec_color);
 
     let tl_v1 = Vec3::new(0.0, 0.0, 0.0);
     let tl_v2 = Vec3::new(1.0, 0.0, 0.0);
@@ -90,11 +129,13 @@ fn create_floor() -> (Triangle, Triangle) {
 }
 
 fn create_spheres() -> (Sphere, Sphere) {
+    let spec_color = Vec3::new(1.0, 1.0, 1.0);
+
     let sphere_1_color = Vec3::new(0.5, 0.5, 0.5);
-    let sphere_1_material = Material::new(sphere_1_color);
+    let sphere_1_material = Material::new(sphere_1_color, spec_color);
 
     let sphere_2_color = Vec3::new(1.0, 1.0, 1.0);
-    let sphere_2_material = Material::new(sphere_2_color);
+    let sphere_2_material = Material::new(sphere_2_color, spec_color);
 
     let sphere_radius = 2.0;
 

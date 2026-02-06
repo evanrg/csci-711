@@ -4,25 +4,31 @@ use glam::{Mat4, Vec3};
 
 use crate::{
     geometry::{intersection::Intersection, object::Object},
-    lighting::ray::Ray,
+    lighting::{light_source::LightSource, ray::Ray},
 };
 
 pub struct World {
     objects: Vec<Box<dyn Object + 'static>>,
-    pub background_color: Vec3,
+    pub lights: Vec<LightSource>,
+    pub background_radiance: Vec3,
 }
 
 impl World {
-    pub fn new(background_color: Vec3) -> Self {
+    pub fn new(background_radiance: Vec3) -> Self {
         Self {
             objects: vec![],
-            background_color,
+            lights: vec![],
+            background_radiance,
         }
     }
 
     pub fn add<T: Object + 'static>(&mut self, obj: T) {
         let boxed_obj = Box::new(obj);
         self.objects.push(boxed_obj);
+    }
+
+    pub fn add_light(&mut self, light: LightSource) {
+        self.lights.push(light);
     }
 
     pub fn intersection_from_ray(&self, ray: &Ray) -> Option<Intersection> {
@@ -56,6 +62,20 @@ impl World {
         Some(min_intersect)
     }
 
+    pub fn can_see_light(&self, intersection: &Intersection, light_pos: Vec3) -> bool {
+        let offset_origin = intersection.intersection_point + intersection.normal * 0.01;
+        let ray = Ray::new(
+            offset_origin,
+            (light_pos - intersection.intersection_point).normalize(),
+        );
+
+        if let Some(_) = self.intersection_from_ray(&ray) {
+            return false;
+        }
+
+        true
+    }
+
     pub fn objects_to_world_space(&mut self) {
         for obj_idx in 0..self.objects.len() {
             let obj = self.objects.get_mut(obj_idx).unwrap();
@@ -74,6 +94,12 @@ impl World {
         for obj_idx in 0..self.objects.len() {
             let obj = self.objects.get_mut(obj_idx).unwrap();
             obj.as_mut().compile_model();
+        }
+    }
+
+    pub fn lights_to_view_space(&mut self, view_transform: &Mat4) {
+        for light in self.lights.iter_mut() {
+            light.to_view_space_mut(view_transform);
         }
     }
 }
