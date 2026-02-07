@@ -53,13 +53,13 @@ fn main() {
 }
 
 fn create_camera() -> Camera {
-    let camera_pos = Vec3::new(0.0, 0.0, 10.0);
-    let look_at = Vec3::new(0.0, 0.0, 0.0);
+    let camera_pos = Vec3::new(0.0, 6.0, 10.0);
+    let look_at = Vec3::new(0.0, 5.0, 0.0);
     let up = Vec3::new(0.0, 1.0, 0.0);
 
     let focal_length = 5.0;
-    let img_dim = (800, 600);
-    let film_plane_dim = (4, 3);
+    let img_dim = (1000, 600);
+    let film_plane_dim = (5, 3);
 
     Camera::new(
         camera_pos,
@@ -74,7 +74,7 @@ fn create_camera() -> Camera {
 fn create_lights() -> Vec<LightSource> {
     let mut lights = vec![];
 
-    let main_light_pos = Vec3::new(5.0, 10.0, 5.0);
+    let main_light_pos = Vec3::new(-1.0, 20.0, 10.0);
     let main_light_radiance = Vec3::new(2.0, 2.0, 2.0);
     let main_light_ambient = Vec3::new(0.25, 0.25, 0.25);
 
@@ -83,16 +83,6 @@ fn create_lights() -> Vec<LightSource> {
         main_light_radiance,
         main_light_ambient,
     ));
-
-    // let red_light_pos = Vec3::new(-5.0, 5.0, 5.0);
-    // let red_light_radiance = Vec3::new(0.5, 0.1, 0.1);
-    // let red_light_ambient = Vec3::new(0.25, 0.0, 0.0);
-
-    // lights.push(LightSource::new(
-    //     red_light_pos,
-    //     red_light_radiance,
-    //     red_light_ambient,
-    // ));
 
     lights
 }
@@ -117,11 +107,11 @@ fn create_floor() -> (Triangle, Triangle) {
     let mut triangle_l = Triangle::new((tl_v1, tl_v2, tl_v3), triangle_l_material);
     let mut triangle_r = Triangle::new((tr_v1, tr_v2, tr_v3), triangle_r_material);
 
-    triangle_l.translate_mut(Vec3::new(-8.0, -6.0, -10.0));
+    triangle_l.translate_mut(Vec3::new(-8.0, 0.0, 0.0));
     triangle_l.scale_mut(Vec3::new(30.0, 200.0, 1.0));
     triangle_l.rotate_x_mut(-90.0);
 
-    triangle_r.translate_mut(Vec3::new(-8.0, -6.0, -10.0));
+    triangle_r.translate_mut(Vec3::new(-8.0, 0.0, 0.0));
     triangle_r.scale_mut(Vec3::new(30.0, 200.0, 1.0));
     triangle_r.rotate_x_mut(-90.0);
 
@@ -143,10 +133,10 @@ fn create_spheres() -> (Sphere, Sphere) {
     let sphere_pos = Vec3::new(0.0, 0.0, 0.0);
 
     let mut sphere_gray = Sphere::new(sphere_pos, sphere_radius, sphere_1_material);
-    sphere_gray.translate_mut(Vec3::new(-1.0, 0.5, -1.5));
+    sphere_gray.translate_mut(Vec3::new(-1.0, 6.0, -1.5));
 
     let mut sphere_white = Sphere::new(sphere_pos, sphere_radius, sphere_2_material);
-    sphere_white.translate_mut(Vec3::new(1.5, -1.0, -6.0));
+    sphere_white.translate_mut(Vec3::new(1.5, 4.5, -6.0));
 
     (sphere_gray, sphere_white)
 }

@@ -30,12 +30,12 @@ impl IlluminationModel for Phong {
         }
         avg_amb /= world.lights.len() as f32;
 
-        let amb_r = mat_r * avg_amb.x * self.ka;
-        let amb_g = mat_g * avg_amb.y * self.ka;
-        let amb_b = mat_b * avg_amb.z * self.ka;
+        let amb_r = mat_r * avg_amb.x;
+        let amb_g = mat_g * avg_amb.y;
+        let amb_b = mat_b * avg_amb.z;
 
         // default radiance is just the ambient color
-        let mut radiance = Vec3::new(amb_r, amb_g, amb_b);
+        let mut radiance = self.ka * Vec3::new(amb_r, amb_g, amb_b);
 
         let mut total_diff_r = 0.0;
         let mut total_diff_g = 0.0;
@@ -70,7 +70,8 @@ impl IlluminationModel for Phong {
 
             // specular calculation
             let r_i = s_i.reflect(intersection.normal).normalize();
-            let spec_factor = r_i.dot(view_dir).powf(self.ke);
+            let spec_angle = r_i.dot(view_dir);
+            let spec_factor = spec_angle.powf(self.ke);
 
             total_spec_r += l_r * mat_s_r * spec_factor;
             total_spec_g += l_g * mat_s_g * spec_factor;

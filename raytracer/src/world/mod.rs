@@ -63,7 +63,7 @@ impl World {
     }
 
     pub fn can_see_light(&self, intersection: &Intersection, light_pos: Vec3) -> bool {
-        let offset_origin = intersection.intersection_point + intersection.normal * 0.01;
+        let offset_origin = intersection.intersection_point + intersection.normal * 0.001;
         let ray = Ray::new(
             offset_origin,
             (light_pos - intersection.intersection_point).normalize(),

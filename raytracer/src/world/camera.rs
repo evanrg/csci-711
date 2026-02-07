@@ -97,11 +97,11 @@ impl Camera {
                     radiance = ill_model.illuminate(world, &int, self.position);
                 }
 
-                *rendered.get_pixel_mut(x, y) = image::Rgb([
-                    (radiance.x * 255.0) as u8,
-                    (radiance.y * 255.0) as u8,
-                    (radiance.z * 255.0) as u8,
-                ]);
+                let r = (radiance.x * 255.0).min(255.0);
+                let g = (radiance.y * 255.0).min(255.0);
+                let b = (radiance.z * 255.0).min(255.0);
+
+                *rendered.get_pixel_mut(x, y) = image::Rgb([r as u8, g as u8, b as u8]);
             }
 
             curr_position.x = x_start;

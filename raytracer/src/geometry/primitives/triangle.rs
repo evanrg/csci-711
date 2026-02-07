@@ -106,7 +106,7 @@ impl Object for Triangle {
             return None;
         }
 
-        let factor = 1.0 / (p.dot(e1));
+        let factor = 1.0 / den;
         let vect = Vec3::new(q.dot(e2), p.dot(t), q.dot(ray.direction));
 
         let intersect = factor * vect;
@@ -122,7 +122,7 @@ impl Object for Triangle {
         }
 
         let intersection_point = ray.origin + intersect.x * ray.direction;
-        let norm = e1.cross(e2);
+        let norm = e1.cross(e2).normalize();
 
         Some(Intersection::new(intersection_point, norm, self.material))
     }
