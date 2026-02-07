@@ -74,8 +74,8 @@ fn create_camera() -> Camera {
 fn create_lights() -> Vec<LightSource> {
     let mut lights = vec![];
 
-    let main_light_pos = Vec3::new(-1.0, 20.0, 10.0);
-    let main_light_radiance = Vec3::new(2.0, 2.0, 2.0);
+    let main_light_pos = Vec3::new(-3.0, 10.0, 10.0);
+    let main_light_radiance = Vec3::new(1.0, 0.5, 1.0);
     let main_light_ambient = Vec3::new(0.25, 0.25, 0.25);
 
     lights.push(LightSource::new(
@@ -84,12 +84,22 @@ fn create_lights() -> Vec<LightSource> {
         main_light_ambient,
     ));
 
+    let second_light_pos = Vec3::new(10.0, 10.0, 10.0);
+    let second_light_radiance = Vec3::new(0.5, 1.0, 1.0);
+    let second_light_ambient = Vec3::new(0.25, 0.25, 0.25);
+
+    lights.push(LightSource::new(
+        second_light_pos,
+        second_light_radiance,
+        second_light_ambient,
+    ));
+
     lights
 }
 
 fn create_floor() -> (Triangle, Triangle) {
-    let triangle_l_color = Vec3::new(1.0, 0.0, 0.0);
-    let triangle_r_color = Vec3::new(1.0, 1.0, 0.0);
+    let triangle_l_color = Vec3::new(1.0, 0.05, 0.05);
+    let triangle_r_color = Vec3::new(1.0, 1.0, 0.05);
 
     let spec_color = Vec3::new(1.0, 1.0, 1.0);
 
