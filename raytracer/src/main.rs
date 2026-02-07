@@ -49,7 +49,7 @@ fn main() {
     world.objects_to_view_space(camera.get_view_transform());
     world.lights_to_view_space(camera.get_view_transform());
 
-    camera.render(&world, IlluminationType::Phong);
+    camera.render(&world, IlluminationType::PhongBlinn);
 }
 
 fn create_camera() -> Camera {

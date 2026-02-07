@@ -3,7 +3,9 @@ use image::{ImageBuffer, RgbImage};
 
 use crate::{
     lighting::{
-        illumination::{IlluminationModel, IlluminationType, phong::Phong},
+        illumination::{
+            IlluminationModel, IlluminationType, phong::Phong, phong_blinn::PhongBlinn,
+        },
         ray::Ray,
     },
     world::World,
@@ -72,8 +74,9 @@ impl Camera {
 
         let mut rendered: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
-        let mut ill_model = match illumination_type {
-            IlluminationType::Phong => Phong::new(0.1, 0.7, 0.3, 32.0),
+        let mut ill_model: Box<dyn IlluminationModel> = match illumination_type {
+            IlluminationType::Phong => Box::new(Phong::new(0.1, 0.7, 0.3, 32.0)),
+            IlluminationType::PhongBlinn => Box::new(PhongBlinn::new(0.1, 0.7, 0.3, 32.0)),
         };
 
         // look at all our rays for intersections
