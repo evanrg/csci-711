@@ -49,7 +49,7 @@ fn main() {
     world.objects_to_view_space(camera.get_view_transform());
     world.lights_to_view_space(camera.get_view_transform());
 
-    camera.render(&world, IlluminationType::Phong);
+    camera.render(&world, IlluminationType::AshikhminShirley);
 }
 
 fn create_camera() -> Camera {
@@ -91,7 +91,7 @@ fn create_floor() -> (Triangle, Triangle) {
     let triangle_l_color = Vec3::new(1.0, 0.0, 0.0);
     let triangle_r_color = Vec3::new(1.0, 1.0, 0.0);
 
-    let spec_color = Vec3::new(1.0, 1.0, 1.0);
+    let spec_color = Vec3::new(0.1, 0.1, 0.1);
 
     let triangle_l_material = Material::new(triangle_l_color, spec_color);
     let triangle_r_material = Material::new(triangle_r_color, spec_color);
@@ -119,7 +119,7 @@ fn create_floor() -> (Triangle, Triangle) {
 }
 
 fn create_spheres() -> (Sphere, Sphere) {
-    let spec_color = Vec3::new(1.0, 1.0, 1.0);
+    let spec_color = Vec3::new(0.1, 0.1, 0.1);
 
     let sphere_1_color = Vec3::new(0.5, 0.5, 0.5);
     let sphere_1_material = Material::new(sphere_1_color, spec_color);
