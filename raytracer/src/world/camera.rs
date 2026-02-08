@@ -84,22 +84,40 @@ impl Camera {
                 curr_position += w_offset;
 
                 let origin = Vec3::new(0.0, 0.0, 0.0);
-                let direction = curr_position.normalize();
 
-                let ray = Ray::new(origin, direction);
+                let top_left = curr_position - (w_offset / 4.0) - (h_offset / 4.0);
+                let top_right = top_left + (w_offset / 2.0);
+                let bottom_left = top_left - (h_offset / 2.0);
+                let bottom_right = top_right - (h_offset / 2.0);
 
-                let intersection = world.intersection_from_ray(&ray);
+                let tl_dir = top_left.normalize();
+                let tr_dir = top_right.normalize();
+                let bl_dir = bottom_left.normalize();
+                let br_dir = bottom_right.normalize();
 
-                // change rendering here based on illumination type
-                let mut radiance = world.background_radiance;
+                let dirs = vec![tl_dir, tr_dir, bl_dir, br_dir];
 
-                if let Some(int) = intersection {
-                    radiance = ill_model.illuminate(world, &int, self.position);
+                let mut rads = [world.background_radiance; 4];
+
+                for dir_idx in 0..dirs.len() {
+                    let dir = dirs[dir_idx];
+                    let ray = Ray::new(origin, dir);
+                    let intersection = world.intersection_from_ray(&ray);
+
+                    if let Some(int) = intersection {
+                        rads[dir_idx] = ill_model.illuminate(world, &int, self.position);
+                    }
                 }
 
-                let r = (radiance.x * 255.0).min(255.0);
-                let g = (radiance.y * 255.0).min(255.0);
-                let b = (radiance.z * 255.0).min(255.0);
+                let mut avg_radiance = Vec3::new(0.0, 0.0, 0.0);
+                for rad in rads {
+                    avg_radiance += rad;
+                }
+                avg_radiance /= rads.len() as f32;
+
+                let r = (avg_radiance.x * 255.0).min(255.0);
+                let g = (avg_radiance.y * 255.0).min(255.0);
+                let b = (avg_radiance.z * 255.0).min(255.0);
 
                 *rendered.get_pixel_mut(x, y) = image::Rgb([r as u8, g as u8, b as u8]);
             }
