@@ -76,7 +76,7 @@ fn create_lights() -> Vec<LightSource> {
 
     let main_light_pos = Vec3::new(-1.0, 20.0, 10.0);
     let main_light_radiance = Vec3::new(2.0, 2.0, 2.0);
-    let main_light_ambient = Vec3::new(0.25, 0.25, 0.25);
+    let main_light_ambient = Vec3::new(0.1, 0.1, 0.1);
 
     lights.push(LightSource::new(
         main_light_pos,

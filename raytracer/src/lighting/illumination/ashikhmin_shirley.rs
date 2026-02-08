@@ -34,7 +34,7 @@ impl IlluminationModel for AshikhminShirley {
         let amb_g = mat_g * avg_amb.y;
         let amb_b = mat_b * avg_amb.z;
 
-        let mut radiance = Vec3::new(amb_r, amb_g, amb_b) * 0.1;
+        let mut radiance = Vec3::new(amb_r, amb_g, amb_b);
 
         let mat_s_r = intersection.material.specular_color.x;
         let mat_s_g = intersection.material.specular_color.y;
