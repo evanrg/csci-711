@@ -2,10 +2,14 @@ use glam::Vec3;
 
 use crate::{geometry::intersection::Intersection, world::World};
 
+pub mod ashikhmin_shirley;
 pub mod phong;
+pub mod phong_blinn;
 
 pub enum IlluminationType {
     Phong,
+    PhongBlinn,
+    AshikhminShirley,
 }
 
 pub trait IlluminationModel {
