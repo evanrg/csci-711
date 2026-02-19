@@ -8,13 +8,13 @@ use crate::{
 pub struct Sphere {
     center: Vec3,
     radius: f32,
-    material: Material,
+    material: Box<dyn Material>,
     model_transform: Mat4,
     translation_matrix: Mat4,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Material) -> Self {
+    pub fn new(center: Vec3, radius: f32, material: Box<dyn Material>) -> Self {
         Self {
             center,
             radius,
@@ -37,7 +37,7 @@ impl Sphere {
 }
 
 impl Object for Sphere {
-    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection<'_>> {
         // calculate variables for quadratic equation
         let ray_to_center = ray.origin - self.center;
 
@@ -72,7 +72,7 @@ impl Object for Sphere {
             return Some(Intersection::new(
                 Vec3::new(i_x, i_y, i_z),
                 Vec3::new(n_x, n_y, n_z).normalize(),
-                self.material,
+                &self.material,
             ));
         }
 
@@ -107,7 +107,7 @@ impl Object for Sphere {
         Some(Intersection::new(
             Vec3::new(i_x, i_y, i_z),
             Vec3::new(n_x, n_y, n_z).normalize(),
-            self.material,
+            &self.material,
         ))
     }
 

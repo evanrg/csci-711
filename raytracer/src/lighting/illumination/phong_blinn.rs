@@ -19,9 +19,11 @@ impl PhongBlinn {
 
 impl IlluminationModel for PhongBlinn {
     fn illuminate(&mut self, world: &World, intersection: &Intersection, cam_pos: Vec3) -> Vec3 {
-        let mat_r = intersection.material.color.x;
-        let mat_g = intersection.material.color.y;
-        let mat_b = intersection.material.color.z;
+        let mat_color = intersection.material.get_color(intersection);
+
+        let mat_r = mat_color.x;
+        let mat_g = mat_color.y;
+        let mat_b = mat_color.z;
 
         // La term which will just be average ambient of all the lights
         let mut avg_amb = Vec3::new(0.0, 0.0, 0.0);
@@ -41,9 +43,11 @@ impl IlluminationModel for PhongBlinn {
         let mut total_diff_g = 0.0;
         let mut total_diff_b = 0.0;
 
-        let mat_s_r = intersection.material.specular_color.x;
-        let mat_s_g = intersection.material.specular_color.y;
-        let mat_s_b = intersection.material.specular_color.z;
+        let mat_spec_color = intersection.material.get_spec_color(intersection);
+
+        let mat_s_r = mat_spec_color.x;
+        let mat_s_g = mat_spec_color.y;
+        let mat_s_b = mat_spec_color.z;
 
         let mut total_spec_r = 0.0;
         let mut total_spec_g = 0.0;

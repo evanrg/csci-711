@@ -26,9 +26,11 @@ impl IlluminationModel for AshikhminShirley {
         }
         avg_amb /= world.lights.len() as f32;
 
-        let mat_r = intersection.material.color.x;
-        let mat_g = intersection.material.color.y;
-        let mat_b = intersection.material.color.z;
+        let mat_color = intersection.material.get_color(intersection);
+
+        let mat_r = mat_color.x;
+        let mat_g = mat_color.y;
+        let mat_b = mat_color.z;
 
         let amb_r = mat_r * avg_amb.x;
         let amb_g = mat_g * avg_amb.y;
@@ -36,9 +38,11 @@ impl IlluminationModel for AshikhminShirley {
 
         let mut radiance = Vec3::new(amb_r, amb_g, amb_b);
 
-        let mat_s_r = intersection.material.specular_color.x;
-        let mat_s_g = intersection.material.specular_color.y;
-        let mat_s_b = intersection.material.specular_color.z;
+        let mat_spec_color = intersection.material.get_spec_color(intersection);
+
+        let mat_s_r = mat_spec_color.x;
+        let mat_s_g = mat_spec_color.y;
+        let mat_s_b = mat_spec_color.z;
 
         // diffuse stuff we will need
         let diff_fact = 28.0 / (23.0 * PI);

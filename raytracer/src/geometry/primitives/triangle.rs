@@ -9,7 +9,7 @@ use crate::{
 
 pub struct Triangle {
     vertices: (Vec3, Vec3, Vec3),
-    material: Material,
+    material: Box<dyn Material>,
     model_transform: Mat4,
     scaling_matrix: Mat4,
     translation_matrix: Mat4,
@@ -17,7 +17,7 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(vertices: (Vec3, Vec3, Vec3), material: Material) -> Self {
+    pub fn new(vertices: (Vec3, Vec3, Vec3), material: Box<dyn Material>) -> Self {
         Self {
             vertices,
             material,
@@ -93,7 +93,7 @@ impl Triangle {
 }
 
 impl Object for Triangle {
-    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection<'_>> {
         let e1 = self.vertices.1 - self.vertices.0;
         let e2 = self.vertices.2 - self.vertices.0;
         let t = ray.origin - self.vertices.0;
@@ -124,7 +124,7 @@ impl Object for Triangle {
         let intersection_point = ray.origin + intersect.x * ray.direction;
         let norm = e1.cross(e2).normalize();
 
-        Some(Intersection::new(intersection_point, norm, self.material))
+        Some(Intersection::new(intersection_point, norm, &self.material))
     }
 
     fn to_world_space_mut(&mut self) {

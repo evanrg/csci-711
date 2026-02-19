@@ -31,7 +31,7 @@ impl World {
         self.lights.push(light);
     }
 
-    pub fn intersection_from_ray(&self, ray: &Ray) -> Option<Intersection> {
+    pub fn intersection_from_ray(&self, ray: &Ray) -> Option<Intersection<'_>> {
         let mut intersects: Vec<Intersection> = vec![];
 
         for obj in &self.objects {

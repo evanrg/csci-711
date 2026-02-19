@@ -3,7 +3,7 @@ use glam::Mat4;
 use crate::{geometry::intersection::Intersection, lighting::ray::Ray};
 
 pub trait Object {
-    fn intersect(&self, ray: &Ray) -> Option<Intersection>;
+    fn intersect(&self, ray: &Ray) -> Option<Intersection<'_>>;
 
     fn to_world_space_mut(&mut self);
 
