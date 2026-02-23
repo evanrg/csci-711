@@ -1,4 +1,4 @@
-use glam::Vec3;
+use glam::{Mat4, Vec3};
 
 use crate::{
     geometry::intersection::Intersection, lighting::illumination::IlluminationModel, world::World,
@@ -18,8 +18,16 @@ impl PhongBlinn {
 }
 
 impl IlluminationModel for PhongBlinn {
-    fn illuminate(&mut self, world: &World, intersection: &Intersection, cam_pos: Vec3) -> Vec3 {
-        let mat_color = intersection.material.get_color(intersection);
+    fn illuminate(
+        &mut self,
+        world: &World,
+        intersection: &Intersection,
+        cam_pos: Vec3,
+        view_transform: &Mat4,
+    ) -> Vec3 {
+        let mat_color = intersection
+            .object
+            .get_color(view_transform, intersection.intersection_point);
 
         let mat_r = mat_color.x;
         let mat_g = mat_color.y;
@@ -43,7 +51,9 @@ impl IlluminationModel for PhongBlinn {
         let mut total_diff_g = 0.0;
         let mut total_diff_b = 0.0;
 
-        let mat_spec_color = intersection.material.get_spec_color(intersection);
+        let mat_spec_color = intersection
+            .object
+            .get_specular_color(view_transform, intersection.intersection_point);
 
         let mat_s_r = mat_spec_color.x;
         let mat_s_g = mat_spec_color.y;

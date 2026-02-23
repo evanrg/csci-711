@@ -1,4 +1,4 @@
-use glam::Mat4;
+use glam::{Mat4, Vec3};
 
 use crate::{geometry::intersection::Intersection, lighting::ray::Ray};
 
@@ -10,4 +10,8 @@ pub trait Object {
     fn to_view_space_mut(&mut self, view_transform: &Mat4);
 
     fn compile_model(&mut self);
+
+    fn get_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3;
+
+    fn get_specular_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3;
 }

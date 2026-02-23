@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use glam::{Mat4, Quat, Vec3, Vec4, Vec4Swizzles};
+use glam::{Mat4, Quat, Vec2, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
     geometry::{intersection::Intersection, material::Material, object::Object},
@@ -90,6 +90,14 @@ impl Triangle {
 
         self.vertices = (v1, v2, v3);
     }
+
+    fn uv_from_int(&self, view_transform: &Mat4, int: Vec3) -> Vec2 {
+        let int_h = Vec4::from((int, 1.0));
+        let world_space = view_transform.inverse().mul_vec4(int_h);
+        let model_space = self.model_transform.inverse().mul_vec4(world_space);
+
+        model_space.xy()
+    }
 }
 
 impl Object for Triangle {
@@ -124,7 +132,7 @@ impl Object for Triangle {
         let intersection_point = ray.origin + intersect.x * ray.direction;
         let norm = e1.cross(e2).normalize();
 
-        Some(Intersection::new(intersection_point, norm, &self.material))
+        Some(Intersection::new(intersection_point, norm, self))
     }
 
     fn to_world_space_mut(&mut self) {
@@ -133,6 +141,16 @@ impl Object for Triangle {
 
     fn to_view_space_mut(&mut self, view_transform: &Mat4) {
         self.verts_mut(view_transform);
+    }
+
+    fn get_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
+        let uv = self.uv_from_int(view_transform, int);
+        self.material.get_color(Some(uv))
+    }
+
+    fn get_specular_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
+        let uv = self.uv_from_int(view_transform, int);
+        self.material.get_spec_color(Some(uv))
     }
 
     fn compile_model(&mut self) {

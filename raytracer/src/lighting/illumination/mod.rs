@@ -1,4 +1,4 @@
-use glam::Vec3;
+use glam::{Mat4, Vec3};
 
 use crate::{geometry::intersection::Intersection, world::World};
 
@@ -13,5 +13,11 @@ pub enum IlluminationType {
 }
 
 pub trait IlluminationModel {
-    fn illuminate(&mut self, world: &World, intersection: &Intersection, cam_pos: Vec3) -> Vec3;
+    fn illuminate(
+        &mut self,
+        world: &World,
+        intersection: &Intersection,
+        cam_pos: Vec3,
+        view_transform: &Mat4,
+    ) -> Vec3;
 }

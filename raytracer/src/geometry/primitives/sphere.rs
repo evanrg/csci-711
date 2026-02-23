@@ -1,7 +1,13 @@
-use glam::{Mat4, Vec3, Vec4, Vec4Swizzles};
+use std::{any::Any, f32::consts::PI};
+
+use glam::{Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
-    geometry::{intersection::Intersection, material::Material, object::Object},
+    geometry::{
+        intersection::Intersection,
+        material::{FlatMaterial, Material, ProceduralMaterial},
+        object::Object,
+    },
     lighting::ray::Ray,
 };
 
@@ -33,6 +39,18 @@ impl Sphere {
     fn center_mut(&mut self, transform: &Mat4) {
         let center_h = Vec4::from((self.center, 1.0));
         self.center = transform.mul_vec4(center_h).xyz();
+    }
+
+    fn uv_from_int(&self, view_transform: &Mat4, int: Vec3) -> Vec2 {
+        let int_h = Vec4::from((int, 1.0));
+        let world_space = view_transform.inverse().mul_vec4(int_h);
+        let model_space = self.model_transform.inverse().mul_vec4(world_space);
+
+        let model_norm = model_space.xyz().normalize();
+        let u = 0.5 + model_norm.z.atan2(model_norm.x) / 2.0 * PI;
+        let v = 0.5 + model_norm.y.asin() / PI;
+
+        Vec2::new(u, v)
     }
 }
 
@@ -72,7 +90,7 @@ impl Object for Sphere {
             return Some(Intersection::new(
                 Vec3::new(i_x, i_y, i_z),
                 Vec3::new(n_x, n_y, n_z).normalize(),
-                &self.material,
+                self,
             ));
         }
 
@@ -107,7 +125,7 @@ impl Object for Sphere {
         Some(Intersection::new(
             Vec3::new(i_x, i_y, i_z),
             Vec3::new(n_x, n_y, n_z).normalize(),
-            &self.material,
+            self,
         ))
     }
 
@@ -117,6 +135,16 @@ impl Object for Sphere {
 
     fn to_view_space_mut(&mut self, view_transform: &Mat4) {
         self.center_mut(view_transform);
+    }
+
+    fn get_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
+        let uv = self.uv_from_int(view_transform, int);
+        self.material.get_color(Some(uv))
+    }
+
+    fn get_specular_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
+        let uv = self.uv_from_int(view_transform, int);
+        self.material.get_spec_color(Some(uv))
     }
 
     fn compile_model(&mut self) {

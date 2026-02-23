@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use glam::Vec3;
+use glam::{Mat4, Vec3};
 
 use crate::{
     geometry::intersection::Intersection, lighting::illumination::IlluminationModel, world::World,
@@ -18,7 +18,13 @@ impl AshikhminShirley {
 }
 
 impl IlluminationModel for AshikhminShirley {
-    fn illuminate(&mut self, world: &World, intersection: &Intersection, cam_pos: Vec3) -> Vec3 {
+    fn illuminate(
+        &mut self,
+        world: &World,
+        intersection: &Intersection,
+        cam_pos: Vec3,
+        view_transform: &Mat4,
+    ) -> Vec3 {
         // La term which will just be average ambient of all the lights
         let mut avg_amb = Vec3::new(0.0, 0.0, 0.0);
         for light in world.lights.iter() {
@@ -26,7 +32,9 @@ impl IlluminationModel for AshikhminShirley {
         }
         avg_amb /= world.lights.len() as f32;
 
-        let mat_color = intersection.material.get_color(intersection);
+        let mat_color = intersection
+            .object
+            .get_color(view_transform, intersection.intersection_point);
 
         let mat_r = mat_color.x;
         let mat_g = mat_color.y;
@@ -38,7 +46,9 @@ impl IlluminationModel for AshikhminShirley {
 
         let mut radiance = Vec3::new(amb_r, amb_g, amb_b);
 
-        let mat_spec_color = intersection.material.get_spec_color(intersection);
+        let mat_spec_color = intersection
+            .object
+            .get_specular_color(view_transform, intersection.intersection_point);
 
         let mat_s_r = mat_spec_color.x;
         let mat_s_g = mat_spec_color.y;

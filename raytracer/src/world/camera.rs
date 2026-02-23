@@ -110,7 +110,8 @@ impl Camera {
                     let intersection = world.intersection_from_ray(&ray);
 
                     if let Some(int) = intersection {
-                        rads[dir_idx] = ill_model.illuminate(world, &int, self.position);
+                        rads[dir_idx] =
+                            ill_model.illuminate(world, &int, self.position, &self.view_transform);
                     }
                 }
 

@@ -1,8 +1,8 @@
-use glam::Vec3;
+use glam::{Vec2, Vec3};
 
 use crate::{
     geometry::{
-        material::FlatMaterial,
+        material::{FlatMaterial, ProceduralMaterial},
         primitives::{sphere::Sphere, triangle::Triangle},
     },
     lighting::{illumination::IlluminationType, light_source::LightSource},
@@ -87,14 +87,30 @@ fn create_lights() -> Vec<LightSource> {
     lights
 }
 
+fn checkerboard_color_func(uv: Vec2) -> Vec3 {
+    let scaled_u = (uv.x * 10.0).floor() as i32;
+    let scaled_v = (uv.y * 30.0).floor() as i32;
+
+    if scaled_u % 2 == 0 && scaled_v % 2 == 0 {
+        return Vec3::new(1.0, 0.0, 0.0);
+    }
+
+    if scaled_u % 2 != 0 && scaled_v % 2 != 0 {
+        return Vec3::new(1.0, 0.0, 0.0);
+    }
+
+    Vec3::new(1.0, 1.0, 0.0)
+}
+
+fn checkerboard_spec_color_func(_: Vec2) -> Vec3 {
+    Vec3::new(1.0, 1.0, 1.0)
+}
+
 fn create_floor() -> (Triangle, Triangle) {
-    let triangle_l_color = Vec3::new(1.0, 0.0, 0.0);
-    let triangle_r_color = Vec3::new(1.0, 1.0, 0.0);
-
-    let spec_color = Vec3::new(1.0, 1.0, 1.0);
-
-    let triangle_l_material = FlatMaterial::new(triangle_l_color, spec_color);
-    let triangle_r_material = FlatMaterial::new(triangle_r_color, spec_color);
+    let triangle_l_material =
+        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func);
+    let triangle_r_material =
+        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func);
 
     let tl_v1 = Vec3::new(0.0, 0.0, 0.0);
     let tl_v2 = Vec3::new(1.0, 0.0, 0.0);
