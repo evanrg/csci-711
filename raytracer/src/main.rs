@@ -2,7 +2,7 @@ use glam::{Vec2, Vec3};
 
 use crate::{
     geometry::{
-        material::{FlatMaterial, ProceduralMaterial},
+        material::{FlatMaterial, ProceduralMaterial, TextureMaterial},
         primitives::{sphere::Sphere, triangle::Triangle},
     },
     lighting::{illumination::IlluminationType, light_source::LightSource},
@@ -135,13 +135,9 @@ fn create_floor() -> (Triangle, Triangle) {
 }
 
 fn create_spheres() -> (Sphere, Sphere) {
-    let spec_color = Vec3::new(1.0, 1.0, 1.0);
+    let sphere_1_material = TextureMaterial::new(String::from("./assets/brick.jpg"));
 
-    let sphere_1_color = Vec3::new(0.5, 0.5, 0.5);
-    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color);
-
-    let sphere_2_color = Vec3::new(1.0, 1.0, 1.0);
-    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color);
+    let sphere_2_material = TextureMaterial::new(String::from("./assets/wood.jpg"));
 
     let sphere_radius = 2.0;
 
