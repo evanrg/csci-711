@@ -51,8 +51,8 @@ impl Sphere {
             .normalize();
 
         let model_norm = model_space.xyz().normalize();
-        let u = 0.5 + model_norm.z.atan2(model_norm.x) / 2.0 * PI;
-        let v = 0.5 + model_norm.y.asin() / PI;
+        let u = model_norm.z.atan2(model_norm.x) / (2.0 * PI) + 0.5;
+        let v = model_norm.y.acos() / PI;
 
         Vec2::new(u, v)
     }
