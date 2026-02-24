@@ -44,7 +44,11 @@ impl Sphere {
     fn uv_from_int(&self, view_transform: &Mat4, int: Vec3) -> Vec2 {
         let int_h = Vec4::from((int, 1.0));
         let world_space = view_transform.inverse().mul_vec4(int_h);
-        let model_space = self.model_transform.inverse().mul_vec4(world_space);
+        let model_space = self
+            .model_transform
+            .inverse()
+            .mul_vec4(world_space)
+            .normalize();
 
         let model_norm = model_space.xyz().normalize();
         let u = 0.5 + model_norm.z.atan2(model_norm.x) / 2.0 * PI;
