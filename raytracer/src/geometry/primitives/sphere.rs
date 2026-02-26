@@ -1,13 +1,9 @@
-use std::{any::Any, f32::consts::PI};
+use std::f32::consts::PI;
 
 use glam::{Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
-    geometry::{
-        intersection::Intersection,
-        material::{FlatMaterial, Material, ProceduralMaterial},
-        object::Object,
-    },
+    geometry::{intersection::Intersection, material::Material, object::Object},
     lighting::ray::Ray,
 };
 
