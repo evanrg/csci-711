@@ -1,4 +1,5 @@
 use glam::{Vec2, Vec3};
+use noise::{NoiseFn, Perlin};
 
 use crate::{
     geometry::{
@@ -87,19 +88,43 @@ fn create_lights() -> Vec<LightSource> {
     lights
 }
 
-fn checkerboard_color_func(uv: Vec2) -> Vec3 {
+fn checker_rand(uv: Vec2) -> Vec3 {
     let scaled_u = (uv.x * 10.0).floor() as i32;
     let scaled_v = (uv.y * 30.0).floor() as i32;
 
+    let perlin = Perlin::new(Perlin::DEFAULT_SEED);
+    let red_noise = perlin.get([uv.x as f64, uv.y as f64]);
+
     if scaled_u % 2 == 0 && scaled_v % 2 == 0 {
-        return Vec3::new(1.0, 0.0, 0.0);
+        return Vec3::new(red_noise as f32, 0.0, 0.0);
     }
 
     if scaled_u % 2 != 0 && scaled_v % 2 != 0 {
-        return Vec3::new(1.0, 0.0, 0.0);
+        return Vec3::new(red_noise as f32, 0.0, 0.0);
     }
 
     Vec3::new(1.0, 1.0, 0.0)
+}
+
+// change this for different patterns
+const TIME: f32 = 4.3;
+
+//
+// This comes from https://www.shadertoy.com/view/WtdXR8
+//
+fn random_texture(uv: Vec2) -> Vec3 {
+    let mut uv = uv;
+
+    for i in 1..10 {
+        let fi = i as f32;
+        uv.x += 0.6 / fi * (fi * 2.5 * uv.y + TIME).cos();
+        uv.y += 0.6 / fi * (fi * 1.5 * uv.x + TIME).cos();
+    }
+
+    let mut rgb = Vec3::new(0.1, 0.1, 0.1);
+    rgb /= (TIME - uv.y - uv.x).sin().abs();
+
+    rgb
 }
 
 fn checkerboard_spec_color_func(_: Vec2) -> Vec3 {
@@ -107,10 +132,8 @@ fn checkerboard_spec_color_func(_: Vec2) -> Vec3 {
 }
 
 fn create_floor() -> (Triangle, Triangle) {
-    let triangle_l_material =
-        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func);
-    let triangle_r_material =
-        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func);
+    let triangle_l_material = ProceduralMaterial::new(&checker_rand, &checkerboard_spec_color_func);
+    let triangle_r_material = ProceduralMaterial::new(&checker_rand, &checkerboard_spec_color_func);
 
     let tl_v1 = Vec3::new(0.0, 0.0, 0.0);
     let tl_v2 = Vec3::new(1.0, 0.0, 0.0);
