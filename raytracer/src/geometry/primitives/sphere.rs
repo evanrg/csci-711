@@ -1,11 +1,11 @@
-use std::{any::Any, f32::consts::PI};
+use std::f32::consts::PI;
 
 use glam::{Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
     geometry::{
         intersection::Intersection,
-        material::{FlatMaterial, Material, ProceduralMaterial},
+        material::{Material},
         object::Object,
     },
     lighting::ray::Ray,
@@ -153,5 +153,17 @@ impl Object for Sphere {
 
     fn compile_model(&mut self) {
         self.model_transform = self.translation_matrix.mul_mat4(&self.model_transform);
+    }
+
+    fn get_kr(&self) -> f32 {
+        self.material.get_kr()
+    }
+
+    fn get_kt(&self) -> f32 {
+        self.material.get_kt()
+    }
+
+    fn get_max_depth(&self) -> u32 {
+        self.material.get_max_depth()
     }
 }

@@ -76,8 +76,8 @@ impl Camera {
         let mut rendered: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
         let mut ill_model: Box<dyn IlluminationModel> = match illumination_type {
-            IlluminationType::Phong => Box::new(Phong::new(0.1, 0.7, 0.3, 32.0)),
-            IlluminationType::PhongBlinn => Box::new(PhongBlinn::new(0.1, 0.7, 0.3, 32.0)),
+            IlluminationType::Phong => Box::new(Phong::new(0.2, 0.6, 0.2, 32.0)),
+            IlluminationType::PhongBlinn => Box::new(PhongBlinn::new(0.2, 0.6, 0.2, 32.0)),
             IlluminationType::AshikhminShirley => Box::new(AshikhminShirley::new(100.0, 100.0)),
         };
 
@@ -111,7 +111,7 @@ impl Camera {
 
                     if let Some(int) = intersection {
                         rads[dir_idx] =
-                            ill_model.illuminate(world, &int, self.position, &self.view_transform);
+                            ill_model.illuminate(world, &int, self.position, &self.view_transform, 1);
                     }
                 }
 

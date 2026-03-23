@@ -160,4 +160,16 @@ impl Object for Triangle {
             .mul_mat4(&self.scaling_matrix)
             .mul_mat4(&self.model_transform);
     }
+
+    fn get_kr(&self) -> f32 {
+        self.material.get_kr()
+    }
+
+    fn get_kt(&self) -> f32 {
+        self.material.get_kt()
+    }
+
+    fn get_max_depth(&self) -> u32 {
+        self.material.get_max_depth()
+    }
 }

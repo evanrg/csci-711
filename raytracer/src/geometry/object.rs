@@ -14,4 +14,10 @@ pub trait Object {
     fn get_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3;
 
     fn get_specular_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3;
+
+    fn get_kr(&self) -> f32;
+
+    fn get_kt(&self) -> f32;
+
+    fn get_max_depth(&self) -> u32;
 }

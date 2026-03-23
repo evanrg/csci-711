@@ -1,7 +1,7 @@
 use glam::{Mat4, Vec3};
 
 use crate::{
-    geometry::intersection::Intersection, lighting::illumination::IlluminationModel, world::World,
+    geometry::intersection::Intersection, lighting::{illumination::IlluminationModel, ray::Ray}, world::World,
 };
 
 pub struct PhongBlinn {
@@ -24,6 +24,7 @@ impl IlluminationModel for PhongBlinn {
         intersection: &Intersection,
         cam_pos: Vec3,
         view_transform: &Mat4,
+        depth: u32,
     ) -> Vec3 {
         let mat_color = intersection
             .object
@@ -63,6 +64,13 @@ impl IlluminationModel for PhongBlinn {
         let mut total_spec_g = 0.0;
         let mut total_spec_b = 0.0;
 
+        let mut total_ref = Vec3::new(0.0, 0.0, 0.0);
+
+        let kr = intersection.object.get_kr();
+        let kt = intersection.object.get_kt();
+
+        let max_depth = intersection.object.get_max_depth();
+
         let view_dir = (cam_pos - intersection.intersection_point).normalize();
 
         for light in world.lights.iter() {
@@ -90,6 +98,27 @@ impl IlluminationModel for PhongBlinn {
             total_spec_r += l_r * mat_s_r * spec_factor;
             total_spec_g += l_g * mat_s_g * spec_factor;
             total_spec_b += l_b * mat_s_b * spec_factor;
+
+            // reflection calculation
+            if depth < max_depth {
+
+                if kr > 0.0 {
+                    let reflected = s_i + 2.0 * angle / intersection.normal.length().powi(2) * intersection.normal;
+                    let offset = reflected.normalize() * 0.001;
+                    let refl_ray = Ray::new(intersection.intersection_point + offset, reflected.normalize());
+
+                    if let Some(refl_int) = world.intersection_from_ray(&refl_ray) {
+                        let refl_color = self.illuminate(world, &refl_int, cam_pos, view_transform, depth + 1);
+                        total_ref += kr * refl_color;
+                    } else {
+                        total_ref += kr * world.background_radiance;
+                    }
+                }
+
+                if kt > 0.0 {
+                    // not handling this yet
+                }
+            }
         }
 
         let mut diffuse = Vec3::new(total_diff_r, total_diff_g, total_diff_b);
@@ -100,6 +129,7 @@ impl IlluminationModel for PhongBlinn {
 
         radiance += diffuse;
         radiance += specular;
+        radiance += total_ref;
 
         radiance
     }

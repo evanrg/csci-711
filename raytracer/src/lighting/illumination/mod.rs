@@ -19,5 +19,6 @@ pub trait IlluminationModel {
         intersection: &Intersection,
         cam_pos: Vec3,
         view_transform: &Mat4,
+        depth: u32,
     ) -> Vec3;
 }

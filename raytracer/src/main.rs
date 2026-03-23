@@ -76,7 +76,7 @@ fn create_lights() -> Vec<LightSource> {
 
     let main_light_pos = Vec3::new(-1.0, 20.0, 10.0);
     let main_light_radiance = Vec3::new(1.0, 1.0, 1.0);
-    let main_light_ambient = Vec3::new(0.1, 0.1, 0.1);
+    let main_light_ambient = Vec3::new(1.0, 1.0, 1.0);
 
     lights.push(LightSource::new(
         main_light_pos,
@@ -108,9 +108,9 @@ fn checkerboard_spec_color_func(_: Vec2) -> Vec3 {
 
 fn create_floor() -> (Triangle, Triangle) {
     let triangle_l_material =
-        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func);
+        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func, 0.0, 0.0, 1);
     let triangle_r_material =
-        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func);
+        ProceduralMaterial::new(&checkerboard_color_func, &checkerboard_spec_color_func, 0.0, 0.0, 1);
 
     let tl_v1 = Vec3::new(0.0, 0.0, 0.0);
     let tl_v2 = Vec3::new(1.0, 0.0, 0.0);
@@ -137,11 +137,11 @@ fn create_floor() -> (Triangle, Triangle) {
 fn create_spheres() -> (Sphere, Sphere) {
     let spec_color = Vec3::new(1.0, 1.0, 1.0);
 
-    let sphere_1_color = Vec3::new(0.5, 0.5, 0.5);
-    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color);
+    let sphere_1_color = Vec3::new(0.25, 0.25, 0.25);
+    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color, 0.0, 0.0, 1);
 
-    let sphere_2_color = Vec3::new(1.0, 1.0, 1.0);
-    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color);
+    let sphere_2_color = Vec3::new(0.5, 0.5, 0.5);
+    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 0.5, 0.0, 20);
 
     let sphere_radius = 2.0;
 
