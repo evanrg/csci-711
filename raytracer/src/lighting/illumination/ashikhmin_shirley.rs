@@ -24,7 +24,6 @@ impl IlluminationModel for AshikhminShirley {
         intersection: &Intersection,
         cam_pos: Vec3,
         view_transform: &Mat4,
-        depth: u32,
     ) -> Vec3 {
         // La term which will just be average ambient of all the lights
         let mut avg_amb = Vec3::new(0.0, 0.0, 0.0);

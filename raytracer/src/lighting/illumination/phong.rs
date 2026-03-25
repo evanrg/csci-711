@@ -24,7 +24,6 @@ impl IlluminationModel for Phong {
         intersection: &Intersection,
         cam_pos: Vec3,
         view_transform: &Mat4,
-        depth: u32,
     ) -> Vec3 {
         let mat_color = intersection
             .object

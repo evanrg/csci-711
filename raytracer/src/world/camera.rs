@@ -107,12 +107,8 @@ impl Camera {
                 for dir_idx in 0..dirs.len() {
                     let dir = dirs[dir_idx];
                     let ray = Ray::new(origin, dir);
-                    let intersection = world.intersection_from_ray(&ray);
 
-                    if let Some(int) = intersection {
-                        rads[dir_idx] =
-                            ill_model.illuminate(world, &int, self.position, &self.view_transform, 1);
-                    }
+                    rads[dir_idx] = self.illuminate(ray, 1, world, &mut ill_model);
                 }
 
                 let mut avg_radiance = Vec3::new(0.0, 0.0, 0.0);
@@ -132,5 +128,48 @@ impl Camera {
         }
 
         rendered.save("render.png").unwrap();
+    }
+
+    fn illuminate(
+        &self,
+        ray: Ray,
+        depth: u32,
+        world: &World,
+        ill_model: &mut Box<dyn IlluminationModel>,
+    ) -> Vec3 {
+        let intersection = world.intersection_from_ray(&ray);
+
+        if let None = intersection {
+            return world.background_radiance;
+        }
+
+        let int = intersection.unwrap();
+
+        let mut total_light =
+            ill_model.illuminate(world, &int, self.position, &self.view_transform);
+
+        if depth < int.object.get_max_depth() {
+            let kr = int.object.get_kr();
+            let kt = int.object.get_kt();
+
+            for light in &world.lights {
+                let s_i = (light.position - int.intersection_point).normalize();
+                let angle = s_i.dot(int.normal);
+
+                if kr > 0.0 {
+                    let reflected = s_i + 2.0 * angle / int.normal.length().powi(2) * int.normal;
+                    let offset = reflected.normalize() * 0.001;
+                    let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
+
+                    total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
+                }
+
+                if kt > 0.0 {
+                    // not handling this yet
+                }
+            }
+        }
+
+        return total_light;
     }
 }
