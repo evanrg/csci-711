@@ -152,21 +152,19 @@ impl Camera {
             let kr = int.object.get_kr();
             let kt = int.object.get_kt();
 
-            for light in &world.lights {
-                let s_i = (light.position - int.intersection_point).normalize();
-                let angle = s_i.dot(int.normal);
+            let v_i = ray.direction;
+            let angle = v_i.dot(int.normal);
 
-                if kr > 0.0 {
-                    let reflected = s_i + 2.0 * angle / int.normal.length().powi(2) * int.normal;
-                    let offset = reflected.normalize() * 0.001;
-                    let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
+            if kr > 0.0 {
+                let reflected = v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
+                let offset = reflected.normalize() * 0.001;
+                let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
 
-                    total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
-                }
+                total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
+            }
 
-                if kt > 0.0 {
-                    // not handling this yet
-                }
+            if kt > 0.0 {
+                // not handling this yet
             }
         }
 

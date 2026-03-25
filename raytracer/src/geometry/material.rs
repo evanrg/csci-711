@@ -75,7 +75,7 @@ impl<'a> ProceduralMaterial<'a> {
             specular_color_func,
             kr,
             kt,
-            max_depth
+            max_depth,
         }
     }
 }
@@ -89,7 +89,7 @@ impl<'a> Material for ProceduralMaterial<'static> {
         (self.specular_color_func)(uv.unwrap())
     }
 
-     fn get_kr(&self) -> f32 {
+    fn get_kr(&self) -> f32 {
         self.kr
     }
 
