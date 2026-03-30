@@ -1,9 +1,7 @@
 use glam::{Mat4, Vec3};
 
 use crate::{
-    geometry::intersection::Intersection,
-    lighting::{illumination::IlluminationModel, ray::Ray},
-    world::World,
+    geometry::intersection::Intersection, lighting::illumination::IlluminationModel, world::World,
 };
 
 pub struct PhongBlinn {
@@ -16,6 +14,18 @@ pub struct PhongBlinn {
 impl PhongBlinn {
     pub fn new(ka: f32, kd: f32, ks: f32, ke: f32) -> Self {
         Self { ka, kd, ks, ke }
+    }
+
+    pub fn get_ke(&self) -> f32 {
+        self.ke
+    }
+
+    pub fn get_kd(&self) -> f32 {
+        self.ks
+    }
+
+    pub fn get_ks(&self) -> f32 {
+        self.kd
     }
 }
 
@@ -104,5 +114,9 @@ impl IlluminationModel for PhongBlinn {
         radiance += specular;
 
         radiance
+    }
+
+    fn as_any(&mut self) -> &mut dyn std::any::Any {
+        self
     }
 }

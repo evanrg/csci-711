@@ -15,6 +15,18 @@ impl Phong {
     pub fn new(ka: f32, kd: f32, ks: f32, ke: f32) -> Self {
         Self { ka, kd, ks, ke }
     }
+
+    pub fn get_ke(&self) -> f32 {
+        self.ke
+    }
+
+    pub fn get_kd(&self) -> f32 {
+        self.ks
+    }
+
+    pub fn get_ks(&self) -> f32 {
+        self.kd
+    }
 }
 
 impl IlluminationModel for Phong {
@@ -102,5 +114,9 @@ impl IlluminationModel for Phong {
         radiance += specular;
 
         radiance
+    }
+
+    fn as_any(&mut self) -> &mut dyn std::any::Any {
+        self
     }
 }

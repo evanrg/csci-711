@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use glam::{Mat4, Vec3};
 
 use crate::{geometry::intersection::Intersection, world::World};
@@ -12,7 +14,7 @@ pub enum IlluminationType {
     AshikhminShirley,
 }
 
-pub trait IlluminationModel {
+pub trait IlluminationModel: Any {
     fn illuminate(
         &mut self,
         world: &World,
@@ -20,4 +22,6 @@ pub trait IlluminationModel {
         cam_pos: Vec3,
         view_transform: &Mat4,
     ) -> Vec3;
+
+    fn as_any(&mut self) -> &mut dyn Any;
 }

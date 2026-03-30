@@ -128,4 +128,8 @@ impl IlluminationModel for AshikhminShirley {
 
         radiance
     }
+
+    fn as_any(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
 }

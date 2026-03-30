@@ -49,7 +49,7 @@ fn main() {
     world.objects_to_view_space(camera.get_view_transform());
     world.lights_to_view_space(camera.get_view_transform());
 
-    camera.render(&world, IlluminationType::PhongBlinn);
+    camera.render(&world, IlluminationType::Phong);
 }
 
 fn create_camera() -> Camera {
@@ -158,7 +158,7 @@ fn create_spheres() -> (Sphere, Sphere) {
     let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color, 0.0, 0.0, 1);
 
     let sphere_2_color = Vec3::new(0.0, 0.0, 0.0);
-    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 1.0, 0.0, 4);
+    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 0.1, 0.0, 4);
 
     let sphere_radius = 2.0;
 

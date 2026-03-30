@@ -1,11 +1,16 @@
-use glam::{Mat4, Vec3};
+use std::{f32::consts::PI, ops::DerefMut};
+
+use glam::{Mat4, Vec2, Vec3};
 use image::{ImageBuffer, RgbImage};
+use rand::{RngExt, rng};
 
 use crate::{
     lighting::{
         illumination::{
-            IlluminationModel, IlluminationType, ashikhmin_shirley::AshikhminShirley, phong::Phong,
-            phong_blinn::PhongBlinn,
+            IlluminationModel, IlluminationType,
+            ashikhmin_shirley::AshikhminShirley,
+            phong::Phong,
+            phong_blinn::{self, PhongBlinn},
         },
         ray::Ray,
     },
@@ -148,6 +153,8 @@ impl Camera {
         let mut total_light =
             ill_model.illuminate(world, &int, self.position, &self.view_transform);
 
+        let mut rng = rng();
+
         if depth < int.object.get_max_depth() {
             let kr = int.object.get_kr();
             let kt = int.object.get_kt();
@@ -156,11 +163,51 @@ impl Camera {
             let angle = v_i.dot(int.normal);
 
             if kr > 0.0 {
-                let reflected = v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
-                let offset = reflected.normalize() * 0.001;
-                let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
+                let num_rays = 8;
+                let perfect_reflection =
+                    v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
 
-                total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
+                let mut n = 1.0;
+                let mut kd = 0.6;
+                let mut ks = 0.2;
+
+                if let Some(phong) = ill_model.as_any().downcast_mut::<Phong>() {
+                    n = phong.get_ke();
+                    kd = phong.get_kd();
+                    ks = phong.get_ks();
+                } else if let Some(phong_blinn) = ill_model.as_any().downcast_mut::<PhongBlinn>() {
+                    n = phong_blinn.get_ke();
+                    kd = phong_blinn.get_kd();
+                    ks = phong_blinn.get_ks();
+                }
+
+                for _ in 0..num_rays {
+                    let refl_type: f32 = rng.random();
+
+                    if refl_type > kd + ks {
+                        continue;
+                    }
+
+                    let u1: f32 = rng.random();
+                    let u2: f32 = rng.random();
+
+                    let polar: Vec2;
+
+                    if refl_type < kd {
+                        // diffuse
+                        polar = Vec2::new(u1.sqrt().acos(), 2.0 * PI * u2);
+                    } else {
+                        // specular
+                        polar = Vec2::new(u1.powf(1.0 / (n + 1.0)).acos(), 2.0 * PI * u2);
+                    }
+
+                    let dir = Vec3::new(0.0, 0.0, 0.0);
+
+                    let offset = dir * 0.001;
+                    let refl_ray = Ray::new(int.intersection_point + offset, dir);
+
+                    total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
+                }
             }
 
             if kt > 0.0 {
