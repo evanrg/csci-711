@@ -19,5 +19,7 @@ pub trait Object {
 
     fn get_kt(&self) -> f32;
 
+    fn get_refraction_index(&self) -> f32;
+
     fn get_max_depth(&self) -> u32;
 }

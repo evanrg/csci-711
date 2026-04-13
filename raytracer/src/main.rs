@@ -75,7 +75,7 @@ fn create_lights() -> Vec<LightSource> {
     let mut lights = vec![];
 
     let main_light_pos = Vec3::new(-1.0, 20.0, 10.0);
-    let main_light_radiance = Vec3::new(1.0, 1.0, 1.0);
+    let main_light_radiance = Vec3::new(2.0, 2.0, 2.0);
     let main_light_ambient = Vec3::new(1.0, 1.0, 1.0);
 
     lights.push(LightSource::new(
@@ -83,6 +83,16 @@ fn create_lights() -> Vec<LightSource> {
         main_light_radiance,
         main_light_ambient,
     ));
+
+    // let sec_light_pos = Vec3::new(5.0, 10.0, 10.0);
+    // let sec_light_radiance = Vec3::new(0.8, 0.1, 1.0);
+    // let sec_light_ambient = Vec3::new(1.0, 1.0, 1.0);
+
+    // lights.push(LightSource::new(
+    //     sec_light_pos,
+    //     sec_light_radiance,
+    //     sec_light_ambient,
+    // ));
 
     lights
 }
@@ -137,8 +147,8 @@ fn create_floor() -> (Triangle, Triangle) {
     let tr_v2 = Vec3::new(1.0, 1.0, 0.0);
     let tr_v3 = Vec3::new(0.0, 1.0, 0.0);
 
-    let mut triangle_l = Triangle::new((tl_v1, tl_v2, tl_v3), Box::new(triangle_l_material));
-    let mut triangle_r = Triangle::new((tr_v1, tr_v2, tr_v3), Box::new(triangle_r_material));
+    let mut triangle_l = Triangle::new((tl_v1, tl_v2, tl_v3), Box::new(triangle_l_material), 1.0);
+    let mut triangle_r = Triangle::new((tr_v1, tr_v2, tr_v3), Box::new(triangle_r_material), 1.0);
 
     triangle_l.translate_mut(Vec3::new(-8.0, 0.0, 0.0));
     triangle_l.scale_mut(Vec3::new(30.0, 200.0, 1.0));
@@ -154,21 +164,21 @@ fn create_floor() -> (Triangle, Triangle) {
 fn create_spheres() -> (Sphere, Sphere) {
     let spec_color = Vec3::new(1.0, 1.0, 1.0);
 
-    let sphere_1_color = Vec3::new(0.25, 0.25, 0.25);
-    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color, 0.0, 0.0, 1);
+    let sphere_1_color = Vec3::new(0.05, 0.05, 0.05);
+    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color, 0.0, 1.0, 4);
 
-    let sphere_2_color = Vec3::new(0.0, 0.0, 0.0);
-    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 1.0, 0.0, 4);
+    let sphere_2_color = Vec3::new(0.45, 0.45, 0.45);
+    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 0.4, 0.0, 4);
 
     let sphere_radius = 2.0;
 
     // in model space
     let sphere_pos = Vec3::new(0.0, 0.0, 0.0);
 
-    let mut sphere_gray = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_1_material));
+    let mut sphere_gray = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_1_material), 1.0);
     sphere_gray.translate_mut(Vec3::new(-1.0, 6.0, -1.5));
 
-    let mut sphere_white = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_2_material));
+    let mut sphere_white = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_2_material), 1.0);
     sphere_white.translate_mut(Vec3::new(1.5, 4.5, -6.0));
 
     (sphere_gray, sphere_white)

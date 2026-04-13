@@ -14,10 +14,15 @@ pub struct Triangle {
     scaling_matrix: Mat4,
     translation_matrix: Mat4,
     rotation_matrix: Mat4,
+    refraction_index: f32,
 }
 
 impl Triangle {
-    pub fn new(vertices: (Vec3, Vec3, Vec3), material: Box<dyn Material>) -> Self {
+    pub fn new(
+        vertices: (Vec3, Vec3, Vec3),
+        material: Box<dyn Material>,
+        refraction_index: f32,
+    ) -> Self {
         Self {
             vertices,
             material,
@@ -25,6 +30,7 @@ impl Triangle {
             scaling_matrix: Mat4::IDENTITY,
             translation_matrix: Mat4::IDENTITY,
             rotation_matrix: Mat4::IDENTITY,
+            refraction_index,
         }
     }
 
@@ -171,5 +177,9 @@ impl Object for Triangle {
 
     fn get_max_depth(&self) -> u32 {
         self.material.get_max_depth()
+    }
+
+    fn get_refraction_index(&self) -> f32 {
+        self.refraction_index
     }
 }

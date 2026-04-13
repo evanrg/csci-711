@@ -148,23 +148,66 @@ impl Camera {
         let mut total_light =
             ill_model.illuminate(world, &int, self.position, &self.view_transform);
 
-        if depth < int.object.get_max_depth() {
-            let kr = int.object.get_kr();
-            let kt = int.object.get_kt();
+        if depth == int.object.get_max_depth() {
+            return total_light;
+        };
 
-            let v_i = ray.direction;
-            let angle = v_i.dot(int.normal);
+        let kr = int.object.get_kr();
+        let kt = int.object.get_kt();
 
-            if kr > 0.0 {
-                let reflected = v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
+        let v_i = ray.direction;
+        let angle = v_i.dot(int.normal);
+
+        if kr > 0.0 {
+            let reflected = v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
+            let offset = reflected.normalize() * 0.001;
+            let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
+
+            total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
+        }
+
+        if kt > 0.0 {
+            let refraction_initial;
+            let refraction_transmission;
+            let normal;
+
+            // inside object
+            if (-ray.direction).dot(int.normal) < 0.0 {
+                refraction_initial = int.object.get_refraction_index();
+                refraction_transmission = 1.0; // air
+                normal = -int.normal;
+            } else {
+                refraction_initial = 1.0; // air
+                refraction_transmission = int.object.get_refraction_index();
+                normal = int.normal;
+            }
+
+            if refraction_initial == refraction_transmission {
+                let offset = ray.direction * 0.001;
+                let transmission_ray = Ray::new(int.intersection_point + offset, ray.direction);
+                return total_light
+                    + kt * self.illuminate(transmission_ray, depth + 1, world, ill_model);
+            }
+
+            let refraction_coef = refraction_initial / refraction_transmission;
+            let cos_theta_i = (-ray.direction).dot(normal);
+            let sin_theta_t_sq = (refraction_coef.powi(2)) * (1.0 - (cos_theta_i.powi(2)));
+
+            // perfect reflection
+            if 1.0 - sin_theta_t_sq < 0.0 {
+                let reflected = v_i - 2.0 * angle / normal.length().powi(2) * normal;
                 let offset = reflected.normalize() * 0.001;
                 let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
 
-                total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
-            }
+                total_light += kt * self.illuminate(refl_ray, depth + 1, world, ill_model);
+            } else {
+                let t = refraction_coef * ray.direction.normalize()
+                    + ((refraction_coef * cos_theta_i - (1.0 - sin_theta_t_sq).sqrt()) * normal);
+                let transmission_dir = t.normalize();
+                let offset = transmission_dir * 0.001;
+                let transmission_ray = Ray::new(int.intersection_point + offset, transmission_dir);
 
-            if kt > 0.0 {
-                // not handling this yet
+                total_light += kt * self.illuminate(transmission_ray, depth + 1, world, ill_model);
             }
         }
 

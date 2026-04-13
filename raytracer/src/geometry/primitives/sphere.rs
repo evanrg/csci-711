@@ -13,16 +13,23 @@ pub struct Sphere {
     material: Box<dyn Material>,
     model_transform: Mat4,
     translation_matrix: Mat4,
+    refraction_index: f32,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Box<dyn Material>) -> Self {
+    pub fn new(
+        center: Vec3,
+        radius: f32,
+        material: Box<dyn Material>,
+        refraction_index: f32,
+    ) -> Self {
         Self {
             center,
             radius,
             material,
             model_transform: Mat4::IDENTITY,
             translation_matrix: Mat4::IDENTITY,
+            refraction_index,
         }
     }
 
@@ -161,5 +168,9 @@ impl Object for Sphere {
 
     fn get_max_depth(&self) -> u32 {
         self.material.get_max_depth()
+    }
+
+    fn get_refraction_index(&self) -> f32 {
+        self.refraction_index
     }
 }

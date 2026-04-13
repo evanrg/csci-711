@@ -1,9 +1,7 @@
 use glam::{Mat4, Vec3};
 
 use crate::{
-    geometry::intersection::Intersection,
-    lighting::{illumination::IlluminationModel, ray::Ray},
-    world::World,
+    geometry::intersection::Intersection, lighting::illumination::IlluminationModel, world::World,
 };
 
 pub struct PhongBlinn {
