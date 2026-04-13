@@ -165,17 +165,17 @@ fn create_spheres() -> (Sphere, Sphere) {
     let spec_color = Vec3::new(1.0, 1.0, 1.0);
 
     let sphere_1_color = Vec3::new(0.05, 0.05, 0.05);
-    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color, 0.0, 1.0, 4);
+    let sphere_1_material = FlatMaterial::new(sphere_1_color, spec_color, 0.0, 0.98, 6);
 
     let sphere_2_color = Vec3::new(0.45, 0.45, 0.45);
-    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 0.4, 0.0, 4);
+    let sphere_2_material = FlatMaterial::new(sphere_2_color, spec_color, 0.4, 0.0, 6);
 
     let sphere_radius = 2.0;
 
     // in model space
     let sphere_pos = Vec3::new(0.0, 0.0, 0.0);
 
-    let mut sphere_gray = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_1_material), 1.0);
+    let mut sphere_gray = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_1_material), 0.98);
     sphere_gray.translate_mut(Vec3::new(-1.0, 6.0, -1.5));
 
     let mut sphere_white = Sphere::new(sphere_pos, sphere_radius, Box::new(sphere_2_material), 1.0);
