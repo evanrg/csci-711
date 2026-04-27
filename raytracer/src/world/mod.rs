@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod tone_mapping;
 
 use glam::{Mat4, Vec3};
 

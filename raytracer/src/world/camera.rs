@@ -9,7 +9,7 @@ use crate::{
         },
         ray::Ray,
     },
-    world::World,
+    world::{World, tone_mapping::{reinhard::Reinhard, tone_map::{self, ToneMap, ToneMapType}, ward::Ward}}
 };
 
 pub struct Camera {
@@ -20,6 +20,8 @@ pub struct Camera {
     image_width: u32,
     film_plane_height: u32,
     film_plane_width: u32,
+    ld_max: f32,
+    tone_map: Box<dyn ToneMap>,
 }
 
 impl Camera {
@@ -30,6 +32,8 @@ impl Camera {
         focal_length: f32,
         img_dim: (u32, u32),
         film_plane_dim: (u32, u32),
+        ld_max: f32,
+        tone_map_type: ToneMapType
     ) -> Self {
         let n = (position - look_at).normalize_or_zero();
         let u = up.cross(n).normalize_or_zero();
@@ -43,6 +47,11 @@ impl Camera {
             [-position.dot(u), -position.dot(v), -position.dot(n), 1.0],
         ]);
 
+        let t_map: Box<dyn ToneMap> = match tone_map_type {
+            ToneMapType::Reinhard => {Box::new(Reinhard::new(0.18, ld_max))},
+            ToneMapType::Ward => {Box::new(Ward::new(ld_max))},
+        };
+
         Self {
             position,
             view_transform,
@@ -51,6 +60,8 @@ impl Camera {
             image_width: img_dim.0,
             film_plane_height: film_plane_dim.1,
             film_plane_width: film_plane_dim.0,
+            ld_max,
+            tone_map: t_map
         }
     }
 
@@ -58,7 +69,7 @@ impl Camera {
         &self.view_transform
     }
 
-    pub fn render(&self, world: &World, illumination_type: IlluminationType) {
+    pub fn render(&mut self, world: &World, illumination_type: IlluminationType) {
         let pixel_height = (self.film_plane_height as f32) / (self.image_height as f32);
         let pixel_width = (self.film_plane_width as f32) / (self.image_width as f32);
 
@@ -81,11 +92,18 @@ impl Camera {
             IlluminationType::AshikhminShirley => Box::new(AshikhminShirley::new(100.0, 100.0)),
         };
 
+        let mut total_sum_lum = 0.0;
+        let n = self.image_height * self.image_width;
+
+        let w: usize = self.image_width as usize;
+        let h: usize = self.image_height as usize;
+        let mut irradiances = vec![vec![Vec3::new(0.0, 0.0, 0.0); w]; h];
+
         // look at all our rays for intersections
-        for y in 0..self.image_height {
+        for y in 0..h {
             curr_position -= h_offset;
 
-            for x in 0..self.image_width {
+            for x in 0..w {
                 curr_position += w_offset;
 
                 let origin = Vec3::new(0.0, 0.0, 0.0);
@@ -117,14 +135,33 @@ impl Camera {
                 }
                 avg_radiance /= rads.len() as f32;
 
-                let r = (avg_radiance.x * 255.0).min(255.0);
-                let g = (avg_radiance.y * 255.0).min(255.0);
-                let b = (avg_radiance.z * 255.0).min(255.0);
+                let lum = 0.27 * avg_radiance.x + 0.67 * avg_radiance.y + 0.06 * avg_radiance.z;
 
-                *rendered.get_pixel_mut(x, y) = image::Rgb([r as u8, g as u8, b as u8]);
+                total_sum_lum += (0.0001 + lum).ln();
+
+                irradiances[y][x] = avg_radiance;
             }
 
             curr_position.x = x_start;
+        }
+
+        let avg_log_lum = total_sum_lum / n as f32;
+        let log_avg_lum = avg_log_lum.exp();
+
+        self.tone_map.as_mut().set_log_avg(log_avg_lum);
+
+        for y in 0..h {
+            for x in 0..w {
+                let rad = irradiances[y][x];
+
+                let mut target = self.tone_map.as_ref().compress(rad);
+
+                target = target.clamp(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
+
+                let display = target * 255.0;
+
+                *rendered.get_pixel_mut(x as u32, y as u32) = image::Rgb([display.x as u8, display.y as u8, display.z as u8]);
+            }
         }
 
         rendered.save("render.png").unwrap();

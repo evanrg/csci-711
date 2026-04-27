@@ -6,7 +6,7 @@ use crate::{
         primitives::{sphere::Sphere, triangle::Triangle},
     },
     lighting::{illumination::IlluminationType, light_source::LightSource},
-    world::{World, camera::Camera},
+    world::{World, camera::Camera, tone_mapping::tone_map::ToneMapType},
 };
 
 mod geometry;
@@ -19,7 +19,7 @@ fn main() {
     let (triangle_left, triangle_right) = create_floor();
 
     // Setup camera
-    let camera = create_camera();
+    let mut camera = create_camera();
 
     // Setup lighting
     let lights = create_lights();
@@ -68,6 +68,8 @@ fn create_camera() -> Camera {
         focal_length,
         img_dim,
         film_plane_dim,
+        4.0,
+        ToneMapType::Reinhard,
     )
 }
 
