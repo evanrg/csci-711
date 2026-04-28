@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use glam::Vec3;
 
 use crate::world::tone_mapping::tone_map::ToneMap;
@@ -24,5 +26,9 @@ impl ToneMap for Ward {
 
     fn compress(&self, radiance: Vec3) -> Vec3 {
         self.sf * radiance
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }

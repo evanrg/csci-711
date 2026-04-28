@@ -68,8 +68,8 @@ fn create_camera() -> Camera {
         focal_length,
         img_dim,
         film_plane_dim,
-        3.0,
-        ToneMapType::Reinhard,
+        1.0,
+        ToneMapType::AdaptiveLog,
     )
 }
 

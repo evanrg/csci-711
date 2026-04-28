@@ -9,7 +9,15 @@ use crate::{
         },
         ray::Ray,
     },
-    world::{World, tone_mapping::{reinhard::Reinhard, tone_map::{self, ToneMap, ToneMapType}, ward::Ward}}
+    world::{
+        World,
+        tone_mapping::{
+            adapt_log::AdaptiveLog,
+            reinhard::Reinhard,
+            tone_map::{ToneMap, ToneMapType},
+            ward::Ward,
+        },
+    },
 };
 
 pub struct Camera {
@@ -20,8 +28,8 @@ pub struct Camera {
     image_width: u32,
     film_plane_height: u32,
     film_plane_width: u32,
-    ld_max: f32,
     tone_map: Box<dyn ToneMap>,
+    tone_map_type: ToneMapType,
 }
 
 impl Camera {
@@ -33,7 +41,7 @@ impl Camera {
         img_dim: (u32, u32),
         film_plane_dim: (u32, u32),
         ld_max: f32,
-        tone_map_type: ToneMapType
+        tone_map_type: ToneMapType,
     ) -> Self {
         let n = (position - look_at).normalize_or_zero();
         let u = up.cross(n).normalize_or_zero();
@@ -48,8 +56,9 @@ impl Camera {
         ]);
 
         let t_map: Box<dyn ToneMap> = match tone_map_type {
-            ToneMapType::Reinhard => {Box::new(Reinhard::new(0.18, ld_max))},
-            ToneMapType::Ward => {Box::new(Ward::new(ld_max))},
+            ToneMapType::Reinhard => Box::new(Reinhard::new(0.18, ld_max)),
+            ToneMapType::Ward => Box::new(Ward::new(ld_max)),
+            ToneMapType::AdaptiveLog => Box::new(AdaptiveLog::new(0.95, ld_max)),
         };
 
         Self {
@@ -60,8 +69,8 @@ impl Camera {
             image_width: img_dim.0,
             film_plane_height: film_plane_dim.1,
             film_plane_width: film_plane_dim.0,
-            ld_max,
-            tone_map: t_map
+            tone_map: t_map,
+            tone_map_type,
         }
     }
 
@@ -98,6 +107,7 @@ impl Camera {
         let w: usize = self.image_width as usize;
         let h: usize = self.image_height as usize;
         let mut irradiances = vec![vec![Vec3::new(0.0, 0.0, 0.0); w]; h];
+        let mut max_lum: f32 = 0.0;
 
         // look at all our rays for intersections
         for y in 0..h {
@@ -136,6 +146,7 @@ impl Camera {
                 avg_radiance /= rads.len() as f32;
 
                 let lum = 0.27 * avg_radiance.x + 0.67 * avg_radiance.y + 0.06 * avg_radiance.z;
+                max_lum = max_lum.max(lum);
 
                 total_sum_lum += (0.0001 + lum).ln();
 
@@ -147,6 +158,10 @@ impl Camera {
 
         let avg_log_lum = total_sum_lum / n as f32;
         let log_avg_lum = avg_log_lum.exp();
+
+        if let Some(t_map) = self.tone_map.as_any_mut().downcast_mut::<AdaptiveLog>() {
+            t_map.set_lw_max(max_lum);
+        }
 
         self.tone_map.as_mut().set_log_avg(log_avg_lum);
 
@@ -160,7 +175,8 @@ impl Camera {
 
                 let display = target * 255.0;
 
-                *rendered.get_pixel_mut(x as u32, y as u32) = image::Rgb([display.x as u8, display.y as u8, display.z as u8]);
+                *rendered.get_pixel_mut(x as u32, y as u32) =
+                    image::Rgb([display.x as u8, display.y as u8, display.z as u8]);
             }
         }
 

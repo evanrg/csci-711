@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use glam::Vec3;
 
 use crate::world::tone_mapping::tone_map::ToneMap;
@@ -10,7 +12,6 @@ pub struct Reinhard {
 
 impl Reinhard {
     pub fn new(pct_gray: f32, ld_max: f32) -> Self {
-
         Self {
             key: pct_gray,
             key_over_avg: 0.0,
@@ -20,7 +21,6 @@ impl Reinhard {
 }
 
 impl ToneMap for Reinhard {
-
     fn set_log_avg(&mut self, log_avg: f32) {
         self.key_over_avg = self.key / log_avg;
     }
@@ -35,5 +35,9 @@ impl ToneMap for Reinhard {
         let rad_r = Vec3::new(r_r, g_r, b_r);
 
         rad_r * self.ld_max
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
