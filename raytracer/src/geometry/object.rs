@@ -2,6 +2,11 @@ use glam::{Mat4, Vec3};
 
 use crate::{geometry::intersection::Intersection, lighting::ray::Ray};
 
+//
+// Objects are responsible for knowing if a ray intersects
+// with them, transforming to certain spaces, and knowing
+// various material properties
+//
 pub trait Object {
     fn intersect(&self, ray: &Ray) -> Option<Intersection<'_>>;
 

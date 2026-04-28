@@ -2,6 +2,11 @@ use glam::Vec3;
 
 use crate::geometry::object::Object;
 
+//
+// Stores all relevant information
+// for an intersection
+//
+
 #[derive(Clone, Copy)]
 pub struct Intersection<'a> {
     pub intersection_point: Vec3,

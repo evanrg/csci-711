@@ -52,6 +52,9 @@ fn main() {
     camera.render(&world, IlluminationType::PhongBlinn);
 }
 
+//
+// Create the camera and set the tone map type
+//
 fn create_camera() -> Camera {
     let camera_pos = Vec3::new(0.0, 6.0, 10.0);
     let look_at = Vec3::new(0.0, 5.0, 0.0);
@@ -68,11 +71,14 @@ fn create_camera() -> Camera {
         focal_length,
         img_dim,
         film_plane_dim,
-        1.0,
-        ToneMapType::AdaptiveLog,
+        3.0,
+        ToneMapType::Reinhard,
     )
 }
 
+//
+// Define light sources
+//
 fn create_lights() -> Vec<LightSource> {
     let mut lights = vec![];
 
@@ -86,19 +92,13 @@ fn create_lights() -> Vec<LightSource> {
         main_light_ambient,
     ));
 
-    // let sec_light_pos = Vec3::new(5.0, 10.0, 10.0);
-    // let sec_light_radiance = Vec3::new(0.8, 0.1, 1.0);
-    // let sec_light_ambient = Vec3::new(1.0, 1.0, 1.0);
-
-    // lights.push(LightSource::new(
-    //     sec_light_pos,
-    //     sec_light_radiance,
-    //     sec_light_ambient,
-    // ));
-
     lights
 }
 
+//
+// Procedural color function for
+// the checkerboard floor
+//
 fn checkerboard_color_func(uv: Vec2) -> Vec3 {
     let scaled_u = (uv.x * 10.0).floor() as i32;
     let scaled_v = (uv.y * 30.0).floor() as i32;
@@ -118,6 +118,10 @@ fn checkerboard_spec_color_func(_: Vec2) -> Vec3 {
     Vec3::new(1.0, 1.0, 1.0)
 }
 
+//
+// Create the two triangles that make up the floor
+// and rotate them to be the floor
+//
 fn create_floor() -> (Triangle, Triangle) {
     let triangle_l_material = ProceduralMaterial::new(
         &checkerboard_color_func,
@@ -126,13 +130,6 @@ fn create_floor() -> (Triangle, Triangle) {
         0.0,
         1,
     );
-    // let triangle_l_material = FlatMaterial::new(
-    //     Vec3::new(1.0, 0.0, 0.0),
-    //     Vec3::new(1.0, 1.0, 1.0),
-    //     0.0,
-    //     0.0,
-    //     1,
-    // );
     let triangle_r_material = ProceduralMaterial::new(
         &checkerboard_color_func,
         &checkerboard_spec_color_func,
@@ -163,6 +160,9 @@ fn create_floor() -> (Triangle, Triangle) {
     (triangle_l, triangle_r)
 }
 
+//
+// Create the two spheres
+//
 fn create_spheres() -> (Sphere, Sphere) {
     let spec_color = Vec3::new(1.0, 1.0, 1.0);
 

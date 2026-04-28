@@ -33,17 +33,27 @@ impl Sphere {
         }
     }
 
+    //
+    // Translate the sphere by some distance
+    //
     pub fn translate_mut(&mut self, distance: Vec3) {
         self.translation_matrix.col_mut(3).x = distance.x;
         self.translation_matrix.col_mut(3).y = distance.y;
         self.translation_matrix.col_mut(3).z = distance.z;
     }
 
+    //
+    // Helper for transforming into views
+    //
     fn center_mut(&mut self, transform: &Mat4) {
         let center_h = Vec4::from((self.center, 1.0));
         self.center = transform.mul_vec4(center_h).xyz();
     }
 
+    //
+    // Given an intersection, returns the UV coordinates
+    // of that intersection
+    //
     fn uv_from_int(&self, view_transform: &Mat4, int: Vec3) -> Vec2 {
         let int_h = Vec4::from((int, 1.0));
         let world_space = view_transform.inverse().mul_vec4(int_h);
@@ -62,6 +72,9 @@ impl Sphere {
 }
 
 impl Object for Sphere {
+    //
+    // Determines if a ray intersections the sphere
+    //
     fn intersect(&self, ray: &Ray) -> Option<Intersection<'_>> {
         // calculate variables for quadratic equation
         let ray_to_center = ray.origin - self.center;
@@ -136,24 +149,41 @@ impl Object for Sphere {
         ))
     }
 
+    //
+    // Transform to world space
+    //
     fn to_world_space_mut(&mut self) {
         self.center_mut(&self.model_transform.clone());
     }
 
+    //
+    // Transform to view space
+    //
     fn to_view_space_mut(&mut self, view_transform: &Mat4) {
         self.center_mut(view_transform);
     }
 
+    //
+    // Given an intersection, return the color of
+    // the sphere at that point
+    //
     fn get_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
         let uv = self.uv_from_int(view_transform, int);
         self.material.get_color(Some(uv))
     }
 
+    //
+    // Given an intersection, return the specular
+    // color of the sphere at that point
+    //
     fn get_specular_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
         let uv = self.uv_from_int(view_transform, int);
         self.material.get_spec_color(Some(uv))
     }
 
+    //
+    // Apply all transformations
+    //
     fn compile_model(&mut self) {
         self.model_transform = self.translation_matrix.mul_mat4(&self.model_transform);
     }

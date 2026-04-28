@@ -2,6 +2,14 @@ use std::any::Any;
 
 use glam::Vec3;
 
+//
+// Tone maps use the compress function to
+// determine the new output color
+// This should ultimately be in the 0.0-1.0
+// range, but the camera will clamp it just
+// in case.
+//
+
 pub trait ToneMap: Any {
     fn compress(&self, radiance: Vec3) -> Vec3;
 

@@ -12,6 +12,11 @@ pub enum IlluminationType {
     AshikhminShirley,
 }
 
+//
+// An illumination model is responsible for determining
+// irradiance from an intersection given the various
+// additional information
+//
 pub trait IlluminationModel {
     fn illuminate(
         &mut self,

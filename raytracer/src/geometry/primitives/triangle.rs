@@ -34,18 +34,27 @@ impl Triangle {
         }
     }
 
+    //
+    // Scale the triangle, modifying its scale matrix
+    //
     pub fn scale_mut(&mut self, scalars: Vec3) {
         self.scaling_matrix.col_mut(0).x = scalars.x;
         self.scaling_matrix.col_mut(1).y = scalars.y;
         self.scaling_matrix.col_mut(2).z = scalars.z;
     }
 
+    //
+    // Translate the triangle, modifying its translation matrix
+    //
     pub fn translate_mut(&mut self, distance: Vec3) {
         self.translation_matrix.col_mut(3).x = distance.x;
         self.translation_matrix.col_mut(3).y = distance.y;
         self.translation_matrix.col_mut(3).z = distance.z;
     }
 
+    //
+    // Rotate the triangle on the X-axis by some degree
+    //
     pub fn rotate_x_mut(&mut self, degrees: f32) {
         let radians = degrees * PI / 180.0;
 
@@ -59,6 +68,9 @@ impl Triangle {
         self.rotation_matrix = Mat4::from_quat(q);
     }
 
+    //
+    // Rotate the triangle on the Y-axis by some degree
+    //
     pub fn rotate_y_mut(&mut self, degrees: f32) {
         let radians = degrees * PI / 180.0;
 
@@ -72,6 +84,9 @@ impl Triangle {
         self.rotation_matrix = Mat4::from_quat(q);
     }
 
+    //
+    // Rotate the triangle on the Z-axis by some degree
+    //
     pub fn rotate_z_mut(&mut self, degrees: f32) {
         let radians = degrees * PI / 180.0;
 
@@ -85,6 +100,9 @@ impl Triangle {
         self.rotation_matrix = Mat4::from_quat(q);
     }
 
+    //
+    // Helper method for transforms
+    //
     fn verts_mut(&mut self, transform: &Mat4) {
         let v1_h = Vec4::from((self.vertices.0, 1.0));
         let v2_h = Vec4::from((self.vertices.1, 1.0));
@@ -97,6 +115,10 @@ impl Triangle {
         self.vertices = (v1, v2, v3);
     }
 
+    //
+    // Given an intersection, returns the UV coordinate
+    // of that intersection
+    //
     fn uv_from_int(&self, view_transform: &Mat4, int: Vec3) -> Vec2 {
         let int_h = Vec4::from((int, 1.0));
         let world_space = view_transform.inverse().mul_vec4(int_h);
@@ -107,6 +129,10 @@ impl Triangle {
 }
 
 impl Object for Triangle {
+    //
+    // Given a ray, determines if that ray intersects
+    // the triangle
+    //
     fn intersect(&self, ray: &Ray) -> Option<Intersection<'_>> {
         let e1 = self.vertices.1 - self.vertices.0;
         let e2 = self.vertices.2 - self.vertices.0;
@@ -141,24 +167,41 @@ impl Object for Triangle {
         Some(Intersection::new(intersection_point, norm, self))
     }
 
+    //
+    // Transform to world space
+    //
     fn to_world_space_mut(&mut self) {
         self.verts_mut(&self.model_transform.clone());
     }
 
+    //
+    // Transform to view space
+    //
     fn to_view_space_mut(&mut self, view_transform: &Mat4) {
         self.verts_mut(view_transform);
     }
 
+    //
+    // Given an intersection, return the color of
+    // the sphere at that point
+    //
     fn get_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
         let uv = self.uv_from_int(view_transform, int);
         self.material.get_color(Some(uv))
     }
 
+    //
+    // Given an intersection, return the specular
+    // color of the sphere at that point
+    //
     fn get_specular_color(&self, view_transform: &Mat4, int: Vec3) -> Vec3 {
         let uv = self.uv_from_int(view_transform, int);
         self.material.get_spec_color(Some(uv))
     }
 
+    //
+    // Apply all transformations
+    //
     fn compile_model(&mut self) {
         self.model_transform = self
             .translation_matrix

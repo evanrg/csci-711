@@ -29,7 +29,6 @@ pub struct Camera {
     film_plane_height: u32,
     film_plane_width: u32,
     tone_map: Box<dyn ToneMap>,
-    tone_map_type: ToneMapType,
 }
 
 impl Camera {
@@ -70,7 +69,6 @@ impl Camera {
             film_plane_height: film_plane_dim.1,
             film_plane_width: film_plane_dim.0,
             tone_map: t_map,
-            tone_map_type,
         }
     }
 
@@ -78,6 +76,10 @@ impl Camera {
         &self.view_transform
     }
 
+    //
+    // This performs the actual ray-tracing and creates the image
+    // that is output as render.png
+    //
     pub fn render(&mut self, world: &World, illumination_type: IlluminationType) {
         let pixel_height = (self.film_plane_height as f32) / (self.image_height as f32);
         let pixel_width = (self.film_plane_width as f32) / (self.image_width as f32);
@@ -118,6 +120,7 @@ impl Camera {
 
                 let origin = Vec3::new(0.0, 0.0, 0.0);
 
+                // super-sampling via 4 rays
                 let top_left = curr_position - (w_offset / 4.0) - (h_offset / 4.0);
                 let top_right = top_left + (w_offset / 2.0);
                 let bottom_left = top_left - (h_offset / 2.0);
@@ -139,17 +142,20 @@ impl Camera {
                     rads[dir_idx] = self.illuminate(ray, 1, world, &mut ill_model);
                 }
 
+                // average the 4 rays
                 let mut avg_radiance = Vec3::new(0.0, 0.0, 0.0);
                 for rad in rads {
                     avg_radiance += rad;
                 }
                 avg_radiance /= rads.len() as f32;
 
+                // luminance values for tone-mapping
                 let lum = 0.27 * avg_radiance.x + 0.67 * avg_radiance.y + 0.06 * avg_radiance.z;
                 max_lum = max_lum.max(lum);
 
                 total_sum_lum += (0.0001 + lum).ln();
 
+                // store the irradiance for tone-mapping
                 irradiances[y][x] = avg_radiance;
             }
 
@@ -159,12 +165,14 @@ impl Camera {
         let avg_log_lum = total_sum_lum / n as f32;
         let log_avg_lum = avg_log_lum.exp();
 
+        // adaptive log needs max luminance value
         if let Some(t_map) = self.tone_map.as_any_mut().downcast_mut::<AdaptiveLog>() {
             t_map.set_lw_max(max_lum);
         }
 
         self.tone_map.as_mut().set_log_avg(log_avg_lum);
 
+        // additional pass for tone mapping
         for y in 0..h {
             for x in 0..w {
                 let rad = irradiances[y][x];
@@ -175,6 +183,7 @@ impl Camera {
 
                 let display = target * 255.0;
 
+                // set the pixel color
                 *rendered.get_pixel_mut(x as u32, y as u32) =
                     image::Rgb([display.x as u8, display.y as u8, display.z as u8]);
             }
@@ -183,6 +192,10 @@ impl Camera {
         rendered.save("render.png").unwrap();
     }
 
+    //
+    // Main lighting loop
+    // Handles reflections, transparency, etc.
+    //
     fn illuminate(
         &self,
         ray: Ray,
@@ -211,6 +224,7 @@ impl Camera {
         let v_i = ray.direction;
         let angle = v_i.dot(int.normal);
 
+        // Reflection calculations
         if kr > 0.0 {
             let reflected = v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
             let offset = reflected.normalize() * 0.001;
@@ -219,6 +233,7 @@ impl Camera {
             total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
         }
 
+        // Transparency calculations
         if kt > 0.0 {
             let refraction_initial;
             let refraction_transmission;
