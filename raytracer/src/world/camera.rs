@@ -1,0 +1,269 @@
+use glam::{Mat4, Vec3};
+use image::{ImageBuffer, RgbImage};
+
+use crate::{
+    lighting::{
+        illumination::{
+            IlluminationModel, IlluminationType, ashikhmin_shirley::AshikhminShirley, phong::Phong,
+            phong_blinn::PhongBlinn,
+        },
+        ray::Ray,
+    },
+    world::{
+        World,
+        tone_mapping::{
+            adapt_log::AdaptiveLog,
+            reinhard::Reinhard,
+            tone_map::{ToneMap, ToneMapType},
+            ward::Ward,
+        },
+    },
+};
+
+pub struct Camera {
+    position: Vec3,
+    view_transform: Mat4,
+    focal_length: f32,
+    image_height: u32,
+    image_width: u32,
+    film_plane_height: u32,
+    film_plane_width: u32,
+    tone_map: Box<dyn ToneMap>,
+    tone_map_type: ToneMapType,
+}
+
+impl Camera {
+    pub fn new(
+        position: Vec3,
+        look_at: Vec3,
+        up: Vec3,
+        focal_length: f32,
+        img_dim: (u32, u32),
+        film_plane_dim: (u32, u32),
+        ld_max: f32,
+        tone_map_type: ToneMapType,
+    ) -> Self {
+        let n = (position - look_at).normalize_or_zero();
+        let u = up.cross(n).normalize_or_zero();
+        let v = n.cross(u);
+
+        // col-major ordering
+        let view_transform = Mat4::from_cols_array_2d(&[
+            [u.x, v.x, n.x, 0.0],
+            [u.y, v.y, n.y, 0.0],
+            [u.z, v.z, n.z, 0.0],
+            [-position.dot(u), -position.dot(v), -position.dot(n), 1.0],
+        ]);
+
+        let t_map: Box<dyn ToneMap> = match tone_map_type {
+            ToneMapType::Reinhard => Box::new(Reinhard::new(0.18, ld_max)),
+            ToneMapType::Ward => Box::new(Ward::new(ld_max)),
+            ToneMapType::AdaptiveLog => Box::new(AdaptiveLog::new(0.95, ld_max)),
+        };
+
+        Self {
+            position,
+            view_transform,
+            focal_length,
+            image_height: img_dim.1,
+            image_width: img_dim.0,
+            film_plane_height: film_plane_dim.1,
+            film_plane_width: film_plane_dim.0,
+            tone_map: t_map,
+            tone_map_type,
+        }
+    }
+
+    pub fn get_view_transform(&self) -> &Mat4 {
+        &self.view_transform
+    }
+
+    pub fn render(&mut self, world: &World, illumination_type: IlluminationType) {
+        let pixel_height = (self.film_plane_height as f32) / (self.image_height as f32);
+        let pixel_width = (self.film_plane_width as f32) / (self.image_width as f32);
+
+        let x_start = -(self.film_plane_width as f32) / 2.0 + pixel_width / 2.0;
+
+        let mut curr_position = Vec3::new(
+            x_start,
+            self.film_plane_height as f32 / 2.0 + pixel_height / 2.0,
+            -self.focal_length,
+        );
+
+        let w_offset = Vec3::new(pixel_width, 0.0, 0.0);
+        let h_offset = Vec3::new(0.0, pixel_height, 0.0);
+
+        let mut rendered: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
+
+        let mut ill_model: Box<dyn IlluminationModel> = match illumination_type {
+            IlluminationType::Phong => Box::new(Phong::new(0.2, 0.6, 0.2, 32.0)),
+            IlluminationType::PhongBlinn => Box::new(PhongBlinn::new(0.2, 0.6, 0.2, 32.0)),
+            IlluminationType::AshikhminShirley => Box::new(AshikhminShirley::new(100.0, 100.0)),
+        };
+
+        let mut total_sum_lum = 0.0;
+        let n = self.image_height * self.image_width;
+
+        let w: usize = self.image_width as usize;
+        let h: usize = self.image_height as usize;
+        let mut irradiances = vec![vec![Vec3::new(0.0, 0.0, 0.0); w]; h];
+        let mut max_lum: f32 = 0.0;
+
+        // look at all our rays for intersections
+        for y in 0..h {
+            curr_position -= h_offset;
+
+            for x in 0..w {
+                curr_position += w_offset;
+
+                let origin = Vec3::new(0.0, 0.0, 0.0);
+
+                let top_left = curr_position - (w_offset / 4.0) - (h_offset / 4.0);
+                let top_right = top_left + (w_offset / 2.0);
+                let bottom_left = top_left - (h_offset / 2.0);
+                let bottom_right = top_right - (h_offset / 2.0);
+
+                let tl_dir = top_left.normalize();
+                let tr_dir = top_right.normalize();
+                let bl_dir = bottom_left.normalize();
+                let br_dir = bottom_right.normalize();
+
+                let dirs = vec![tl_dir, tr_dir, bl_dir, br_dir];
+
+                let mut rads = [world.background_radiance; 4];
+
+                for dir_idx in 0..dirs.len() {
+                    let dir = dirs[dir_idx];
+                    let ray = Ray::new(origin, dir);
+
+                    rads[dir_idx] = self.illuminate(ray, 1, world, &mut ill_model);
+                }
+
+                let mut avg_radiance = Vec3::new(0.0, 0.0, 0.0);
+                for rad in rads {
+                    avg_radiance += rad;
+                }
+                avg_radiance /= rads.len() as f32;
+
+                let lum = 0.27 * avg_radiance.x + 0.67 * avg_radiance.y + 0.06 * avg_radiance.z;
+                max_lum = max_lum.max(lum);
+
+                total_sum_lum += (0.0001 + lum).ln();
+
+                irradiances[y][x] = avg_radiance;
+            }
+
+            curr_position.x = x_start;
+        }
+
+        let avg_log_lum = total_sum_lum / n as f32;
+        let log_avg_lum = avg_log_lum.exp();
+
+        if let Some(t_map) = self.tone_map.as_any_mut().downcast_mut::<AdaptiveLog>() {
+            t_map.set_lw_max(max_lum);
+        }
+
+        self.tone_map.as_mut().set_log_avg(log_avg_lum);
+
+        for y in 0..h {
+            for x in 0..w {
+                let rad = irradiances[y][x];
+
+                let mut target = self.tone_map.as_ref().compress(rad);
+
+                target = target.clamp(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
+
+                let display = target * 255.0;
+
+                *rendered.get_pixel_mut(x as u32, y as u32) =
+                    image::Rgb([display.x as u8, display.y as u8, display.z as u8]);
+            }
+        }
+
+        rendered.save("render.png").unwrap();
+    }
+
+    fn illuminate(
+        &self,
+        ray: Ray,
+        depth: u32,
+        world: &World,
+        ill_model: &mut Box<dyn IlluminationModel>,
+    ) -> Vec3 {
+        let intersection = world.intersection_from_ray(&ray);
+
+        if let None = intersection {
+            return world.background_radiance;
+        }
+
+        let int = intersection.unwrap();
+
+        let mut total_light =
+            ill_model.illuminate(world, &int, self.position, &self.view_transform);
+
+        if depth == int.object.get_max_depth() {
+            return total_light;
+        };
+
+        let kr = int.object.get_kr();
+        let kt = int.object.get_kt();
+
+        let v_i = ray.direction;
+        let angle = v_i.dot(int.normal);
+
+        if kr > 0.0 {
+            let reflected = v_i - 2.0 * angle / int.normal.length().powi(2) * int.normal;
+            let offset = reflected.normalize() * 0.001;
+            let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
+
+            total_light += kr * self.illuminate(refl_ray, depth + 1, world, ill_model);
+        }
+
+        if kt > 0.0 {
+            let refraction_initial;
+            let refraction_transmission;
+            let normal;
+
+            // inside object
+            if (-ray.direction).dot(int.normal) < 0.0 {
+                refraction_initial = int.object.get_refraction_index();
+                refraction_transmission = 1.0; // air
+                normal = -int.normal;
+            } else {
+                refraction_initial = 1.0; // air
+                refraction_transmission = int.object.get_refraction_index();
+                normal = int.normal;
+            }
+
+            if refraction_initial == refraction_transmission {
+                let offset = ray.direction * 0.001;
+                let transmission_ray = Ray::new(int.intersection_point + offset, ray.direction);
+                return total_light
+                    + kt * self.illuminate(transmission_ray, depth + 1, world, ill_model);
+            }
+
+            let refraction_coef = refraction_initial / refraction_transmission;
+            let cos_theta_i = (-ray.direction).dot(normal);
+            let sin_theta_t_sq = (refraction_coef.powi(2)) * (1.0 - (cos_theta_i.powi(2)));
+
+            // perfect reflection
+            if 1.0 - sin_theta_t_sq < 0.0 {
+                let reflected = v_i - 2.0 * angle / normal.length().powi(2) * normal;
+                let offset = reflected.normalize() * 0.001;
+                let refl_ray = Ray::new(int.intersection_point + offset, reflected.normalize());
+
+                total_light += kt * self.illuminate(refl_ray, depth + 1, world, ill_model);
+            } else {
+                let t = refraction_coef * ray.direction.normalize()
+                    + ((refraction_coef * cos_theta_i - (1.0 - sin_theta_t_sq).sqrt()) * normal);
+                let transmission_dir = t.normalize();
+                let offset = transmission_dir * 0.001;
+                let transmission_ray = Ray::new(int.intersection_point + offset, transmission_dir);
+
+                total_light += kt * self.illuminate(transmission_ray, depth + 1, world, ill_model);
+            }
+        }
+
+        return total_light;
+    }
+}
