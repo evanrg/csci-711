@@ -11,11 +11,7 @@ impl Ward {
     pub fn new(ld_max: f32) -> Self {
         let num = 1.219 + (ld_max / 2.0).powf(0.4);
 
-
-        Self {
-            num,
-            sf: 0.0,
-        }
+        Self { num, sf: 0.0 }
     }
 }
 
